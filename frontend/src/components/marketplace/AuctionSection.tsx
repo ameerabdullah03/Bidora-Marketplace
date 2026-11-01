@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Clock, TrendingUp, Users } from 'lucide-react'
+import { Clock, TrendingUp, Users, Flame } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
 
 interface Auction {
@@ -66,114 +67,203 @@ export default function AuctionSection() {
     setTimeRemaining(remaining)
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.12,
+        delayChildren: 0.2,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 },
+    },
+  }
+
   if (loading) {
     return (
-      <section className="section-container">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Live Auctions</h2>
-        <p className="text-gray-600 mb-12">Loading auctions...</p>
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Live Auctions</h2>
+          <p className="text-gray-600 mb-12">Loading auctions...</p>
+        </div>
       </section>
     )
   }
 
   return (
-    <section className="section-container">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Live Auctions</h2>
-          <p className="text-gray-600">Bid on exclusive electronics at competitive prices</p>
-        </div>
-        <button
-          onClick={() => window.location.href = '/search?type=auction'}
-          className="btn-primary hidden md:block"
-        >
-          View All Auctions
-        </button>
+    <section className="py-20 bg-gradient-to-b from-slate-50 to-white relative overflow-hidden">
+      {/* Background elements */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-red-500 to-orange-500 rounded-full blur-3xl"></div>
       </div>
 
-      {auctions.length === 0 ? (
-        <div className="text-center py-12 text-gray-600">
-          <p>No active auctions right now. Check back soon!</p>
+      <div className="relative max-w-7xl mx-auto px-4">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <motion.div
+                animate={{ rotate: [0, 10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Flame size={28} className="text-red-500" />
+              </motion.div>
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 to-slate-700 bg-clip-text text-transparent">
+                Live Auctions
+              </h2>
+            </div>
+            <p className="text-xl text-gray-600 max-w-2xl">
+              Bid on exclusive electronics at competitive prices. Limited time offers!
+            </p>
+          </motion.div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => window.location.href = '/search?type=auction'}
+            className="hidden md:inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-xl hover:shadow-xl transition-all"
+          >
+            View All
+            <TrendingUp size={18} />
+          </motion.button>
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {auctions.map((auction) => (
-              <div key={auction.id} className="card !p-0 overflow-hidden hover:shadow-xl transition-all duration-200 group cursor-pointer border-2 border-teal-200">
-                {/* Auction Badge */}
-                <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10 flex items-center gap-1">
-                  <TrendingUp size={12} />
-                  LIVE
-                </div>
 
-                {/* Product Image */}
-                <div className="bg-gradient-to-br from-teal-100 to-teal-200 p-8 flex items-center justify-center h-40 relative overflow-hidden group-hover:scale-105 transition-transform">
-                  <span className="text-gray-400">Image</span>
-                </div>
-
-                {/* Auction Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-teal-600 transition-colors">
-                    {auction.title}
-                  </h3>
-
-                  {/* Condition Badge */}
-                  <div className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded mb-3 capitalize">
-                    {auction.condition}
-                  </div>
-
-                  {/* Current Bid */}
-                  <div className="mb-3 pb-3 border-b border-gray-200">
-                    <p className="text-xs text-gray-600 mb-1">Current Bid</p>
-                    <p className="text-xl font-bold text-teal-600">
-                      Rs. {auction.current_bid.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Starting: Rs. {auction.starting_price.toLocaleString()}
-                    </p>
-                  </div>
-
-                  {/* Bids and Time */}
-                  <div className="flex justify-between items-center mb-4 text-xs">
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <Users size={14} />
-                      <span>{auction.bid_count} bids</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-red-600 font-semibold">
-                      <Clock size={14} />
-                      <span>{timeRemaining[auction.id] || 'Calculating...'}</span>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => window.location.href = `/auction?id=${auction.id}`}
-                      className="flex-1 btn-secondary text-sm py-2 px-3"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => window.location.href = `/auction?id=${auction.id}`}
-                      className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg text-sm py-2 px-3 transition-colors"
-                    >
-                      Bid Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {auctions.length === 0 ? (
+          <div className="text-center py-16 text-gray-600 bg-white rounded-2xl">
+            <p className="text-lg">No active auctions right now. Check back soon!</p>
           </div>
-
-          <div className="text-center mt-8 md:hidden">
-            <button
-              onClick={() => window.location.href = '/search?type=auction'}
-              className="btn-primary px-8 py-3"
+        ) : (
+          <>
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
             >
-              View All Auctions
-            </button>
-          </div>
-        </>
-      )}
+              {auctions.map((auction) => (
+                <motion.div
+                  key={auction.id}
+                  variants={itemVariants}
+                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                  className="group h-full"
+                >
+                  <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full flex flex-col border border-gray-100 hover:border-red-200 relative">
+                    {/* Live Badge */}
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1], boxShadow: ['0 0 0 0 rgba(239, 68, 68, 0.5)', '0 0 0 10px rgba(239, 68, 68, 0)'] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 z-10"
+                    >
+                      <TrendingUp size={12} />
+                      LIVE
+                    </motion.div>
+
+                    {/* Product Image Container */}
+                    <div className="relative h-48 bg-gradient-to-br from-red-100 to-orange-100 overflow-hidden">
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-5xl group-hover:scale-110 transition-transform duration-300">
+                        📷
+                      </div>
+
+                      {/* Time Badge */}
+                      <motion.div
+                        animate={{ scale: timeRemaining[auction.id]?.includes('m') ? 1 : 1.05 }}
+                        className="absolute bottom-3 right-3 bg-black/80 text-red-400 text-xs font-bold px-3 py-1.5 rounded-lg backdrop-blur-sm border border-red-500/50 flex items-center gap-1"
+                      >
+                        <Clock size={12} />
+                        {timeRemaining[auction.id] || 'Calculating...'}
+                      </motion.div>
+                    </div>
+
+                    {/* Auction Info */}
+                    <div className="p-6 flex-1 flex flex-col justify-between">
+                      <div>
+                        <motion.h3 className="font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-red-600 transition-colors text-lg">
+                          {auction.title}
+                        </motion.h3>
+
+                        {/* Condition Badge */}
+                        <div className="inline-block bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 text-xs font-bold px-3 py-1 rounded-lg capitalize mb-4">
+                          {auction.condition}
+                        </div>
+
+                        {/* Current Bid Section */}
+                        <div className="space-y-2 mb-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl">
+                          <p className="text-xs text-gray-600 font-semibold">CURRENT BID</p>
+                          <motion.p
+                            className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent"
+                          >
+                            Rs. {auction.current_bid.toLocaleString()}
+                          </motion.p>
+                          <p className="text-xs text-gray-600">
+                            Starting: Rs. {auction.starting_price.toLocaleString()}
+                          </p>
+                        </div>
+
+                        {/* Bid Count */}
+                        <div className="flex items-center gap-2 text-sm text-gray-700 font-semibold">
+                          <Users size={16} className="text-blue-500" />
+                          <span>{auction.bid_count} active bids</span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-3 pt-6 mt-6 border-t border-gray-200">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => window.location.href = `/auction?id=${auction.id}`}
+                          className="flex-1 border-2 border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg hover:border-red-500 hover:text-red-600 transition-all text-sm"
+                        >
+                          View
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => window.location.href = `/auction?id=${auction.id}`}
+                          className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:shadow-lg transition-all text-sm"
+                        >
+                          Bid Now
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* View All Button - Mobile */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="text-center md:hidden"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => window.location.href = '/search?type=auction'}
+                className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-xl hover:shadow-xl transition-all"
+              >
+                View All Auctions
+                <TrendingUp size={18} />
+              </motion.button>
+            </motion.div>
+          </>
+        )}
+      </div>
     </section>
   )
 }
