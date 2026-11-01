@@ -1,127 +1,200 @@
-import { Share2, Mail, MessageSquare, Link2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Share2, Mail, MessageSquare, Link2, Heart, ArrowRight } from 'lucide-react'
 
 export default function Footer() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 },
+    },
+  }
+
   return (
-    <footer className="bg-gray-900 text-white pt-16 pb-8">
+    <footer className="bg-gradient-to-b from-slate-900 to-slate-950 text-white pt-20 pb-8">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          {/* Brand */}
-          <div className="space-y-4">
+        {/* Newsletter Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-16 p-8 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border border-teal-500/30 rounded-2xl backdrop-blur-xl"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <h3 className="text-2xl font-bold">Bidora</h3>
-              <p className="text-sm text-gray-400 mt-1">Discover. Bid. Buy.</p>
+              <h3 className="text-2xl font-bold mb-2">Subscribe to Bidora Updates</h3>
+              <p className="text-slate-300">Get the latest deals, auction alerts, and exclusive offers.</p>
             </div>
-            <p className="text-sm text-gray-400 leading-relaxed">
+            <div className="flex w-full md:w-auto gap-2">
+              <motion.input
+                whileFocus={{ scale: 1.02 }}
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 px-4 py-3 rounded-lg outline-none text-gray-900 bg-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500"
+              />
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-lg px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 whitespace-nowrap"
+              >
+                <Mail size={18} />
+                Subscribe
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Main Footer Content */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12"
+        >
+          {/* Brand */}
+          <motion.div variants={itemVariants} className="space-y-4">
+            <div>
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-teal-300 to-cyan-300 bg-clip-text text-transparent">
+                Bidora
+              </h3>
+              <p className="text-sm text-slate-400 mt-1">Discover. Bid. Buy.</p>
+            </div>
+            <p className="text-sm text-slate-400 leading-relaxed">
               Pakistan's trusted marketplace for electronics. Buy and sell with confidence.
             </p>
             <div className="flex gap-3 pt-2">
-              <a href="#" className="p-2 bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors">
-                <Share2 size={16} />
-              </a>
-              <a href="#" className="p-2 bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors">
-                <Mail size={16} />
-              </a>
-              <a href="#" className="p-2 bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors">
-                <MessageSquare size={16} />
-              </a>
-              <a href="#" className="p-2 bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors">
-                <Link2 size={16} />
-              </a>
+              {[
+                { icon: Share2, label: 'Facebook' },
+                { icon: Mail, label: 'Email' },
+                { icon: MessageSquare, label: 'Twitter' },
+                { icon: Link2, label: 'LinkedIn' },
+              ].map((social, i) => (
+                <motion.a
+                  key={i}
+                  whileHover={{ scale: 1.1, y: -3 }}
+                  href="#"
+                  className="p-2.5 bg-teal-500/20 hover:bg-teal-500/40 border border-teal-500/30 rounded-lg transition-all"
+                  title={social.label}
+                >
+                  <social.icon size={16} className="text-teal-300" />
+                </motion.a>
+              ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* For Buyers */}
-          <div>
-            <h4 className="font-semibold mb-4">For Buyers</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Browse Products</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Live Auctions</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">How to Bid</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Buyer Protection</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Payment Methods</a></li>
+          <motion.div variants={itemVariants}>
+            <h4 className="font-bold mb-4 text-lg">For Buyers</h4>
+            <ul className="space-y-3 text-sm text-slate-400">
+              {['Browse Products', 'Live Auctions', 'How to Bid', 'Buyer Protection', 'Payment Methods'].map((item, i) => (
+                <motion.li key={i} whileHover={{ x: 4 }} className="transition-transform">
+                  <a href="#" className="hover:text-teal-300 transition-colors flex items-center gap-2">
+                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100" />
+                    {item}
+                  </a>
+                </motion.li>
+              ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* For Sellers */}
-          <div>
-            <h4 className="font-semibold mb-4">For Sellers</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Start Selling</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Seller Dashboard</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Pricing & Fees</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Seller Tools</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Seller Protection</a></li>
+          <motion.div variants={itemVariants}>
+            <h4 className="font-bold mb-4 text-lg">For Sellers</h4>
+            <ul className="space-y-3 text-sm text-slate-400">
+              {['Start Selling', 'Seller Dashboard', 'Pricing & Fees', 'Seller Tools', 'Seller Protection'].map((item, i) => (
+                <motion.li key={i} whileHover={{ x: 4 }} className="transition-transform">
+                  <a href="#" className="hover:text-teal-300 transition-colors flex items-center gap-2">
+                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100" />
+                    {item}
+                  </a>
+                </motion.li>
+              ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Support */}
-          <div>
-            <h4 className="font-semibold mb-4">Support</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Contact Us</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">FAQs</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Report Issue</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Community</a></li>
+          <motion.div variants={itemVariants}>
+            <h4 className="font-bold mb-4 text-lg">Support</h4>
+            <ul className="space-y-3 text-sm text-slate-400">
+              {['Help Center', 'Contact Us', 'FAQs', 'Report Issue', 'Community'].map((item, i) => (
+                <motion.li key={i} whileHover={{ x: 4 }} className="transition-transform">
+                  <a href="#" className="hover:text-teal-300 transition-colors flex items-center gap-2">
+                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100" />
+                    {item}
+                  </a>
+                </motion.li>
+              ))}
             </ul>
-          </div>
-        </div>
-
-        {/* Newsletter */}
-        <div className="bg-teal-600 rounded-lg p-6 mb-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex-1">
-              <h4 className="text-xl font-bold mb-2">Subscribe to Bidora Updates</h4>
-              <p className="text-sm text-white/80">Get the latest deals, auction alerts, and exclusive offers.</p>
-            </div>
-            <div className="flex w-full md:w-auto gap-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-2 rounded-lg outline-none text-gray-900 bg-white placeholder-gray-500"
-              />
-              <button className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2">
-                <Mail size={16} />
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Bottom Footer */}
-        <div className="border-t border-gray-800 pt-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="space-y-2 text-sm text-gray-400">
-              <p><strong>Legal:</strong></p>
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="border-t border-slate-800 pt-8"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="space-y-2 text-sm text-slate-400">
+              <p className="font-semibold text-white">Legal</p>
               <div className="flex flex-wrap gap-4">
-                <a href="#" className="hover:text-teal-400 transition-colors">Terms of Service</a>
-                <a href="#" className="hover:text-teal-400 transition-colors">Privacy Policy</a>
-                <a href="#" className="hover:text-teal-400 transition-colors">Cookie Policy</a>
+                {['Terms of Service', 'Privacy Policy', 'Cookie Policy'].map((item, i) => (
+                  <motion.a
+                    key={i}
+                    whileHover={{ color: '#06B6D4' }}
+                    href="#"
+                    className="hover:text-cyan-400 transition-colors"
+                  >
+                    {item}
+                  </motion.a>
+                ))}
               </div>
             </div>
-            <div className="space-y-2 text-sm text-gray-400">
-              <p><strong>Company:</strong></p>
+            <div className="space-y-2 text-sm text-slate-400">
+              <p className="font-semibold text-white">Company</p>
               <div className="flex flex-wrap gap-4">
-                <a href="#" className="hover:text-teal-400 transition-colors">About Us</a>
-                <a href="#" className="hover:text-teal-400 transition-colors">Blog</a>
-                <a href="#" className="hover:text-teal-400 transition-colors">Careers</a>
+                {['About Us', 'Blog', 'Careers'].map((item, i) => (
+                  <motion.a
+                    key={i}
+                    whileHover={{ color: '#06B6D4' }}
+                    href="#"
+                    className="hover:text-cyan-400 transition-colors"
+                  >
+                    {item}
+                  </motion.a>
+                ))}
               </div>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-            <p>&copy; 2026 Bidora. All rights reserved. Pakistan's Electronics Marketplace.</p>
-            <div className="flex gap-4">
-              <select className="bg-transparent border border-gray-700 rounded px-3 py-1 text-gray-400 hover:border-teal-400 transition-colors">
-                <option>English</option>
-                <option>Urdu</option>
-              </select>
-            </div>
+          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
+            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
+              &copy; 2026 Bidora. All rights reserved. Pakistan's Electronics Marketplace.
+            </motion.p>
+            <motion.div
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="flex items-center gap-1 text-teal-400"
+            >
+              Made with <Heart size={16} className="fill-red-500 text-red-500" /> in Pakistan
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </footer>
   )
 }
-
