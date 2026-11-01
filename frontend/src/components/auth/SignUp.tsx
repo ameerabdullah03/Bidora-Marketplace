@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
-import { supabase } from '../services/supabase'
+import { supabase } from '../../services/supabase'
 
 interface SignUpProps {
   onSuccess?: () => void
@@ -25,7 +25,7 @@ export default function SignUp({ onSuccess, onSwitchToLogin }: SignUpProps) {
 
     try {
       // Sign up with Supabase Auth
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {

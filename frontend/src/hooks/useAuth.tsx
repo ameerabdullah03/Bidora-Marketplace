@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '../services/supabase'
-import { User } from '@supabase/supabase-js'
+import type { User } from '@supabase/supabase-js'
 
 interface UserProfile {
   id: string
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         if (session?.user) {
           setUser(session.user)
           await fetchProfile(session.user.id)
@@ -125,3 +125,4 @@ export function useAuth() {
   }
   return context
 }
+

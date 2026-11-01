@@ -23,7 +23,7 @@ function HomePage() {
 }
 
 function AppContent() {
-  const { user, loading } = useAuth()
+  const { loading } = useAuth()
   const [currentPage, setCurrentPage] = useState('home')
 
   useEffect(() => {
@@ -38,8 +38,8 @@ function AppContent() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-dark-600">Loading Bidora...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Bidora...</p>
         </div>
       </div>
     )
@@ -61,3 +61,4 @@ function App() {
 }
 
 export default App
+
