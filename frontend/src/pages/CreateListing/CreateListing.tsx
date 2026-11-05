@@ -62,9 +62,10 @@ export default function CreateListing() {
       return
     }
 
-    const invalidFile = files.find((file) => !file.type.startsWith('image/') || file.size > 10 * 1024 * 1024)
+    const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
+    const invalidFile = files.find((file) => !allowedImageTypes.has(file.type) || file.size > 10 * 1024 * 1024)
     if (invalidFile) {
-      setError(`${invalidFile.name} must be an image no larger than 10 MB.`)
+      setError(`${invalidFile.name} must be a PNG, JPEG, or WebP image no larger than 10 MB.`)
       return
     }
 
@@ -107,8 +108,8 @@ export default function CreateListing() {
         .insert({
           seller_id: user.id,
           category_id: formData.category_id,
-          title: formData.title,
-          description: formData.description,
+          title: formData.title.trim(),
+          description: formData.description.trim(),
           price: formData.price,
           condition: formData.condition,
           location: formData.location,
@@ -119,7 +120,7 @@ export default function CreateListing() {
         .select()
 
       if (productError) throw productError
-      if (!productData || productData.length === 0) throw new Error('Failed to create product')
+      if (!productData || productData.length === 0) throw new Error('Listing limit reached. Please wait before creating another listing.')
 
       const productId = productData[0].id
       createdProductId = productId
@@ -127,11 +128,12 @@ export default function CreateListing() {
       // Upload images
       for (let i = 0; i < images.length; i++) {
         const file = images[i]
-        const fileName = `${productId}/${Date.now()}-${i}-${file.name}`
+        const extension = file.type === 'image/jpeg' ? 'jpg' : file.type.slice('image/'.length)
+        const fileName = `${productId}/${Date.now()}-${i}.${extension}`
 
         const { error: uploadError } = await supabase.storage
           .from('listing-images')
-          .upload(fileName, file)
+          .upload(fileName, file, { contentType: file.type, upsert: false })
 
         if (uploadError) throw uploadError
         uploadedPaths.push(fileName)
@@ -347,7 +349,7 @@ export default function CreateListing() {
                 <input
                   type="file"
                   multiple
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleImageChange}
                   className="hidden"
                   disabled={images.length >= 5}

@@ -139,19 +139,25 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
     }
 
     try {
-      const { error: bidError } = await supabase.rpc('place_auction_bid', {
+      const { data: bidAccepted, error: bidError } = await supabase.rpc('place_auction_bid', {
         p_auction_id: auctionId,
         p_amount: bid,
       })
 
       if (bidError) throw bidError
+      if (!bidAccepted) {
+        setError('Bid limit reached. Please wait before bidding again.')
+        return
+      }
 
       setBidAmount('')
       setError('')
       fetchAuction()
     } catch (err) {
       console.error('Error placing bid:', err)
-      setError('Failed to place bid. Please try again.')
+      setError(err instanceof Error && err.message.includes('Too many requests')
+        ? 'Bid limit reached. Please wait before bidding again.'
+        : 'Failed to place bid. Please try again.')
     }
   }
 

@@ -17,7 +17,8 @@ node_modules/
 # Environment variables (NEVER commit these!)
 .env
 .env.local
-.env.*.local
+.env.*
+!.env.example
 .env.production.local
 
 # Logs

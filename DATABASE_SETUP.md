@@ -67,7 +67,8 @@ Also verify the `public_profiles` view is available and these RPCs appear in the
 2. Click **Create a new bucket**
 3. Name: `listing-images`
 4. Make it **Public** (toggle on)
-5. Click **Create bucket**
+5. Set the file size limit to **10 MB** and allowed MIME types to `image/jpeg`, `image/png`, and `image/webp`
+6. Click **Create bucket**
 
 This bucket stores product images. SQL policies restrict writes to authenticated sellers and their own product folders; public read access is required for listing images.
 
@@ -76,7 +77,7 @@ This bucket stores product images. SQL policies restrict writes to authenticated
 1. In Supabase **Authentication → URL Configuration**, add your local and production app URLs to the allowed redirect URLs.
 2. Include `{APP_ORIGIN}/auth?mode=recover` so password reset links return to Bidora.
 3. Enable the Email provider and configure production email delivery before launch.
-4. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `frontend/.env.local` and in the hosting environment. Never put a service-role key in the frontend.
+4. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in `frontend/.env.local` and in the hosting environment. The legacy anon variable is still accepted during transition. These browser keys are public; never put a secret or service-role key in a `VITE_*` variable. Configure allowed production Auth rate limits and redirect URLs in Supabase.
 
 For moderation, create and verify the administrator account, then follow `ADMIN_SETUP.md`. Admin membership is not granted automatically.
 

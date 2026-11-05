@@ -20,23 +20,28 @@ export default function AdminPanel() {
   const { user } = useAuth()
   const [listings, setListings] = useState<PendingListing[]>([])
   const [loading, setLoading] = useState(true)
+  const [adminUserId, setAdminUserId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending')
   const [searchQuery, setSearchQuery] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     if (!user) {
+      setAdminUserId(null)
       setLoading(false)
       setErrorMessage('Sign in with an administrator account to moderate listings.')
       return
     }
     const load = async () => {
+      setLoading(true)
       const { data: admin, error } = await supabase.from('admins').select('user_id').eq('user_id', user.id).maybeSingle()
       if (error || !admin) {
+        setAdminUserId(null)
         setLoading(false)
         setErrorMessage('Administrator access is required to view this page.')
         return
       }
+      setAdminUserId(user.id)
       setErrorMessage('')
       await fetchListings()
     }
@@ -144,6 +149,20 @@ export default function AdminPanel() {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  }
+
+  if (!user || adminUserId !== user.id) {
+    return (
+      <main className="min-h-[50vh] bg-gray-50 px-4 py-16">
+        <div className="mx-auto max-w-xl rounded-2xl bg-white p-8 text-center shadow-sm">
+          <h1 className="text-2xl font-bold text-gray-900">Admin access required</h1>
+          <p role={errorMessage ? 'alert' : 'status'} className="mt-3 text-gray-600">
+            {loading ? 'Checking administrator access…' : errorMessage || 'This account is not an administrator.'}
+          </p>
+          {!user && <a href="/auth" className="mt-5 inline-block rounded-lg bg-teal-600 px-5 py-3 font-semibold text-white">Sign in</a>}
+        </div>
+      </main>
+    )
   }
 
   return (

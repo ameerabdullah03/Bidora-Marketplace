@@ -109,7 +109,7 @@ npm install
 Create `.env.local` in the `frontend/` directory:
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 
 **Get these from Supabase:**
@@ -273,7 +273,7 @@ For issues, questions, or feedback:
 ## 🚀 Remaining launch setup
 
 1. Apply the correct SQL path in [`DATABASE_SETUP.md`](DATABASE_SETUP.md), create the `listing-images` bucket, configure auth redirects, and provision an administrator.
-2. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` locally and in the hosting environment.
+2. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` locally and in the hosting environment.
 3. Run buyer, seller, auction, messaging, order, and admin acceptance checks with real Supabase accounts.
 4. Configure hosting and deploy the frontend.
 5. Integrate a payment provider through trusted server callbacks before enabling online payments. Email and SMS notifications also need provider configuration.

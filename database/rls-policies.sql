@@ -18,6 +18,26 @@ ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 
+-- Start with no client privileges, then grant only the operations used by the app.
+REVOKE ALL ON TABLE public.users, public.admins, public.favorites, public.categories,
+  public.products, public.product_images, public.auctions, public.bids, public.orders,
+  public.reviews, public.reports, public.conversations, public.messages
+  FROM PUBLIC, anon, authenticated;
+
+GRANT SELECT ON TABLE public.users, public.admins, public.categories, public.products,
+  public.product_images, public.auctions, public.bids, public.orders, public.reviews,
+  public.reports, public.conversations, public.messages TO authenticated;
+GRANT SELECT ON TABLE public.categories, public.products, public.product_images,
+  public.auctions, public.bids, public.reviews TO anon;
+GRANT SELECT ON TABLE public.public_profiles TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON TABLE public.products TO authenticated;
+GRANT INSERT, DELETE ON TABLE public.product_images TO authenticated;
+GRANT INSERT ON TABLE public.auctions, public.reviews, public.reports, public.conversations TO authenticated;
+GRANT SELECT, INSERT, DELETE ON TABLE public.favorites TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.messages TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE public.product_images_id_seq, public.reviews_id_seq,
+  public.reports_id_seq, public.messages_id_seq TO authenticated;
+
 -- Sellers may write image objects only under folders for their own products.
 CREATE POLICY "listing_images_insert_owned_product"
   ON storage.objects FOR INSERT TO authenticated
@@ -74,10 +94,8 @@ CREATE POLICY "users_update_self"
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
--- Authenticated users can insert (for new signups)
-CREATE POLICY "users_insert_authenticated"
-  ON users FOR INSERT
-  WITH CHECK (auth.uid() = id);
+-- Profiles are created only by the SECURITY DEFINER auth.users trigger.
+DROP POLICY IF EXISTS "users_insert_authenticated" ON users;
 
 CREATE POLICY "admins_view_self"
   ON admins FOR SELECT
@@ -210,6 +228,13 @@ CREATE POLICY "auctions_insert_seller"
   ON auctions FOR INSERT
   WITH CHECK (
     auth.uid() = seller_id
+    AND status = 'active'
+    AND current_bid = 0
+    AND winner_id IS NULL
+    AND total_bids = 0
+    AND minimum_increment > 0
+    AND start_time <= NOW()
+    AND end_time > start_time
     AND EXISTS (
       SELECT 1 FROM products
       WHERE products.id = auctions.product_id
@@ -305,7 +330,15 @@ CREATE POLICY "conversations_view_own"
 -- Authenticated users can create conversations
 CREATE POLICY "conversations_insert_authenticated"
   ON conversations FOR INSERT
-  WITH CHECK (auth.uid() = buyer_id);
+  WITH CHECK (
+    auth.uid() = buyer_id
+    AND buyer_id <> seller_id
+    AND EXISTS (SELECT 1 FROM users WHERE users.id = seller_id AND users.account_type = 'seller')
+    AND (product_id IS NULL OR EXISTS (
+      SELECT 1 FROM products
+      WHERE products.id = conversations.product_id AND products.seller_id = conversations.seller_id
+    ))
+  );
 
 -- ============================================
 -- MESSAGES TABLE POLICIES

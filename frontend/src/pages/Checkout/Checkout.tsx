@@ -117,12 +117,15 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
         })
 
       if (insertError) throw insertError
+      if (!data) throw new Error('Order limit reached. Please wait before placing another order.')
 
       setOrderId(data)
       setOrderCreated(true)
     } catch (err) {
       console.error('Error creating order:', err)
-      setError('Failed to create order. Please try again.')
+      setError(err instanceof Error && err.message.includes('limit reached')
+        ? err.message
+        : 'Failed to create order. Please try again.')
     } finally {
       setLoading(false)
     }

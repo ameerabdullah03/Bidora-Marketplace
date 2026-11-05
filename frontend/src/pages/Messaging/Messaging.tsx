@@ -167,18 +167,21 @@ export default function Messaging() {
 
     try {
       setMessageError('')
-      const { error } = await supabase.from('messages').insert({
+      const { data, error } = await supabase.from('messages').insert({
         conversation_id: selectedConversation,
         sender_id: user?.id,
         content: newMessage.trim(),
-      })
+      }).select('id').maybeSingle()
 
       if (error) throw error
+      if (!data) throw new Error('Message limit reached. Please wait before sending another message.')
       setNewMessage('')
       fetchMessages()
     } catch (err) {
       console.error('Error sending message:', err)
-      setMessageError('Could not send this message. Please try again.')
+      setMessageError(err instanceof Error && err.message.includes('limit reached')
+        ? err.message
+        : 'Could not send this message. Please try again.')
     }
   }
 
@@ -274,6 +277,7 @@ export default function Messaging() {
             <div className="flex gap-2">
               <input
                 type="text"
+                maxLength={5000}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
