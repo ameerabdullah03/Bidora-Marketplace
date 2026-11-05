@@ -49,6 +49,12 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION handle_new_auth_user();
 
+INSERT INTO public.users (id, email, full_name, account_type)
+SELECT id, email, COALESCE(raw_user_meta_data->>'full_name', ''),
+       CASE WHEN raw_user_meta_data->>'account_type' = 'seller' THEN 'seller' ELSE 'buyer' END
+FROM auth.users
+ON CONFLICT (id) DO NOTHING;
+
 -- Admin access is granted manually by a project owner; clients cannot self-promote.
 CREATE TABLE IF NOT EXISTS admins (
   user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
