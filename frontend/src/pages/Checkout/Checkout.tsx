@@ -11,9 +11,10 @@ interface CheckoutData {
   sellerId: string
   sellerName: string
   quantity: number
+  auctionId?: string
 }
 
-export default function Checkout({ checkoutData: initialCheckoutData, productId }: { checkoutData?: CheckoutData; productId?: string }) {
+export default function Checkout({ checkoutData: initialCheckoutData, productId, auctionId }: { checkoutData?: CheckoutData; productId?: string; auctionId?: string }) {
   const { user } = useAuth()
   const [loadedCheckoutData, setLoadedCheckoutData] = useState<CheckoutData | undefined>()
   const [productLoading, setProductLoading] = useState(false)
@@ -28,37 +29,57 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId 
   const checkoutData = initialCheckoutData || loadedCheckoutData
 
   useEffect(() => {
-    if (!productId || initialCheckoutData) return
+    if ((!productId && !auctionId) || initialCheckoutData) return
     let cancelled = false
     setProductLoading(true)
     void (async () => {
       try {
-        const { data, error: productError } = await supabase
-          .from('products')
-          .select('id, title, price, seller_id, seller:users!products_seller_id_fkey(full_name)')
-          .eq('id', productId)
-          .eq('status', 'approved')
-          .eq('is_auction', false)
-          .single()
+        let data: any
+        let productError: unknown
+        if (auctionId) {
+          const result = await supabase
+            .from('auctions')
+            .select('id, current_bid, starting_price, end_time, winner_id, product:products!auctions_product_id_fkey(id, title, seller_id, status, seller:users!products_seller_id_fkey(full_name))')
+            .eq('id', auctionId)
+            .single()
+          data = result.data
+          productError = result.error
+        } else {
+          const result = await supabase
+            .from('products')
+            .select('id, title, price, seller_id, seller:users!products_seller_id_fkey(full_name)')
+            .eq('id', productId!)
+            .eq('status', 'approved')
+            .eq('is_auction', false)
+            .single()
+          data = result.data
+          productError = result.error
+        }
         if (cancelled) return
         if (productError || !data) {
           setError('This product is unavailable for purchase.')
           return
         }
+        const product = auctionId ? (data.product as any) : data
+        if (!product || product.status === 'pending' || product.status === 'rejected' || (auctionId && (data.winner_id !== user?.id || new Date(data.end_time) > new Date()))) {
+          setError('This auction checkout is only available to its winner after it ends.')
+          return
+        }
         setLoadedCheckoutData({
-          productId: data.id,
-          productTitle: data.title,
-          price: Number(data.price),
-          sellerId: data.seller_id,
-          sellerName: (data.seller as any)?.full_name || 'Seller',
+          productId: product.id,
+          productTitle: product.title,
+          price: Number(auctionId ? (data.current_bid || data.starting_price) : product.price),
+          sellerId: product.seller_id,
+          sellerName: (product.seller as any)?.full_name || 'Seller',
           quantity: 1,
+          auctionId,
         })
       } finally {
         if (!cancelled) setProductLoading(false)
       }
     })()
     return () => { cancelled = true }
-  }, [productId, initialCheckoutData])
+  }, [productId, auctionId, user?.id, initialCheckoutData])
 
   const totalPrice = checkoutData?.price || 0
 
@@ -80,10 +101,15 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId 
     setLoading(true)
     try {
       if (paymentMethod !== 'cod') throw new Error('This payment method is not available yet.')
-      const { data, error: insertError } = await supabase.rpc('place_product_order', {
-        p_product_id: checkoutData.productId,
-        p_delivery_address: deliveryAddress,
-      })
+      const { data, error: insertError } = checkoutData.auctionId
+        ? await supabase.rpc('place_auction_order', {
+          p_auction_id: checkoutData.auctionId,
+          p_delivery_address: deliveryAddress,
+        })
+        : await supabase.rpc('place_product_order', {
+          p_product_id: checkoutData.productId,
+          p_delivery_address: deliveryAddress,
+        })
 
       if (insertError) throw insertError
 

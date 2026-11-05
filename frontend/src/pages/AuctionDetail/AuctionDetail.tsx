@@ -325,6 +325,11 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
                   </div>
                 </motion.div>
               )}
+              {isAuctionEnded && isHighestBidder && (
+                <a href={`/checkout?auctionId=${auction.id}`} className="mt-4 block rounded-xl bg-green-600 px-6 py-3 text-center font-bold text-white hover:bg-green-700">
+                  Complete winning purchase
+                </a>
+              )}
             </div>
           </motion.div>
 

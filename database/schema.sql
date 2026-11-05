@@ -181,6 +181,9 @@ CREATE TABLE IF NOT EXISTS orders (
   completed_at TIMESTAMP WITH TIME ZONE
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_one_per_auction
+  ON orders(auction_id) WHERE auction_id IS NOT NULL;
+
 -- ============================================
 -- 8. REVIEWS TABLE
 -- ============================================
@@ -400,6 +403,48 @@ $$;
 
 REVOKE ALL ON FUNCTION place_product_order(UUID, TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION place_product_order(UUID, TEXT) TO authenticated;
+
+CREATE OR REPLACE FUNCTION place_auction_order(p_auction_id UUID, p_delivery_address TEXT)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_auction auctions%ROWTYPE;
+  v_product products%ROWTYPE;
+  v_order_id UUID;
+BEGIN
+  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Authentication required'; END IF;
+  IF length(trim(coalesce(p_delivery_address, ''))) < 10 THEN
+    RAISE EXCEPTION 'Enter a complete delivery address';
+  END IF;
+
+  SELECT * INTO v_auction FROM auctions WHERE id = p_auction_id FOR UPDATE;
+  IF NOT FOUND OR v_auction.status = 'cancelled' OR v_auction.end_time > NOW() THEN
+    RAISE EXCEPTION 'Auction has not ended or is unavailable';
+  END IF;
+  IF v_auction.winner_id IS DISTINCT FROM auth.uid() THEN
+    RAISE EXCEPTION 'Only the winning bidder can place this order';
+  END IF;
+
+  SELECT * INTO v_product FROM products WHERE id = v_auction.product_id FOR UPDATE;
+  IF NOT FOUND OR v_product.status <> 'approved' OR v_product.stock_quantity < 1 THEN
+    RAISE EXCEPTION 'Auction item is unavailable';
+  END IF;
+
+  INSERT INTO orders (buyer_id, seller_id, product_id, auction_id, amount, payment_method, order_status, delivery_address)
+  VALUES (auth.uid(), v_auction.seller_id, v_product.id, v_auction.id, v_auction.current_bid, 'cod', 'pending', trim(p_delivery_address))
+  RETURNING id INTO v_order_id;
+
+  UPDATE products SET stock_quantity = stock_quantity - 1, updated_at = NOW() WHERE id = v_product.id;
+  UPDATE auctions SET status = 'ended', updated_at = NOW() WHERE id = v_auction.id;
+  RETURN v_order_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION place_auction_order(UUID, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION place_auction_order(UUID, TEXT) TO authenticated;
 
 CREATE OR REPLACE FUNCTION advance_order_status(
   p_order_id UUID,

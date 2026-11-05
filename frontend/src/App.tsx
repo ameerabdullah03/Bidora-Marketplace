@@ -183,7 +183,7 @@ function AppContent() {
     return (
       <>
         <Header />
-        <Checkout productId={pageParams.id} />
+        <Checkout productId={pageParams.id} auctionId={pageParams.auctionId} />
         <Footer />
       </>
     )
