@@ -1,4 +1,3 @@
-import './App.css'
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import Header from './components/layout/Header'
@@ -26,12 +25,15 @@ function PageLoading() {
 
 function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bidora-paper text-bidora-ink">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-bidora-lime focus:px-4 focus:py-2">Skip to content</a>
       <Header />
+      <main id="main-content">
       <Hero />
       <Categories />
       <FeaturedProducts />
       <AuctionSection />
+      </main>
       <Footer />
     </div>
   )
@@ -212,4 +214,3 @@ function App() {
 }
 
 export default App
-

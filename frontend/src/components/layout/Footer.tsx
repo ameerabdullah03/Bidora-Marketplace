@@ -1,157 +1,23 @@
-import { motion } from 'framer-motion'
-import { Mail, Heart, ArrowRight } from 'lucide-react'
+import { ArrowRight, Heart } from 'lucide-react'
+
+const groups = [
+  { title: 'Explore', links: [['All listings', '/search'], ['Live auctions', '/#live-auctions'], ['Phones & tablets', '/search?category=1']] },
+  { title: 'Your Bidora', links: [['Saved listings', '/favorites'], ['Orders', '/orders'], ['Messages', '/messages']] },
+  { title: 'Sell with us', links: [['Create a listing', '/create-listing'], ['Seller dashboard', '/dashboard'], ['Join Bidora', '/auth']] },
+]
 
 export default function Footer() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 },
-    },
-  }
-
-  return (
-    <footer className="bg-gradient-to-b from-slate-900 to-slate-950 text-white pt-20 pb-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Marketplace call to action */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-16 p-8 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border border-teal-500/30 rounded-2xl backdrop-blur-xl"
-        >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-2xl font-bold mb-2">Find your next great deal</h3>
-              <p className="text-slate-300">Browse approved listings or start selling on Bidora.</p>
-            </div>
-            <div className="flex w-full md:w-auto gap-3">
-              <a href="/search" className="rounded-lg bg-teal-600 px-5 py-3 text-center font-semibold text-white hover:bg-teal-700">Browse listings</a>
-              <a href="/create-listing" className="rounded-lg border border-teal-300 px-5 py-3 text-center font-semibold text-teal-100 hover:bg-white/10">Start selling</a>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Main Footer Content */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12"
-        >
-          {/* Brand */}
-          <motion.div variants={itemVariants} className="space-y-4">
-            <div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-teal-300 to-cyan-300 bg-clip-text text-transparent">
-                Bidora
-              </h3>
-              <p className="text-sm text-slate-400 mt-1">Discover. Bid. Buy.</p>
-            </div>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Pakistan's trusted marketplace for electronics. Buy and sell with confidence.
-            </p>
-            <a href="mailto:ameer@bidora.dev" className="inline-flex items-center gap-2 pt-2 text-sm text-teal-300 hover:text-teal-100"><Mail size={16} /> Contact Bidora</a>
-          </motion.div>
-
-          {/* For Buyers */}
-          <motion.div variants={itemVariants}>
-            <h4 className="font-bold mb-4 text-lg">For Buyers</h4>
-            <ul className="space-y-3 text-sm text-slate-400">
-              {[
-                { label: 'Browse Products', href: '/search' },
-                { label: 'Live Auctions', href: '/search?type=auction' },
-                { label: 'Saved Listings', href: '/favorites' },
-                { label: 'My Orders', href: '/orders' },
-              ].map((item, i) => (
-                <motion.li key={i} whileHover={{ x: 4 }} className="transition-transform">
-                  <a href={item.href} className="group flex items-center gap-2 hover:text-teal-300 transition-colors">
-                    <ArrowRight size={14} className="opacity-70" />
-                    {item.label}
-                  </a>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* For Sellers */}
-          <motion.div variants={itemVariants}>
-            <h4 className="font-bold mb-4 text-lg">For Sellers</h4>
-            <ul className="space-y-3 text-sm text-slate-400">
-              {[
-                { label: 'Create a Listing', href: '/create-listing' },
-                { label: 'Seller Dashboard', href: '/dashboard' },
-                { label: 'Manage Orders', href: '/orders' },
-                { label: 'Messages', href: '/messages' },
-              ].map((item, i) => (
-                <motion.li key={i} whileHover={{ x: 4 }} className="transition-transform">
-                  <a href={item.href} className="group flex items-center gap-2 hover:text-teal-300 transition-colors">
-                    <ArrowRight size={14} className="opacity-70" />
-                    {item.label}
-                  </a>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Support */}
-          <motion.div variants={itemVariants}>
-            <h4 className="font-bold mb-4 text-lg">Support</h4>
-            <ul className="space-y-3 text-sm text-slate-400">
-              {[
-                { label: 'Email Support', href: 'mailto:ameer@bidora.dev' },
-                { label: 'Sign In', href: '/auth' },
-                { label: 'Browse Listings', href: '/search' },
-              ].map((item, i) => (
-                <motion.li key={i} whileHover={{ x: 4 }} className="transition-transform">
-                  <a href={item.href} className="group flex items-center gap-2 hover:text-teal-300 transition-colors">
-                    <ArrowRight size={14} className="opacity-70" />
-                    {item.label}
-                  </a>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        </motion.div>
-
-        {/* Bottom Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="border-t border-slate-800 pt-8"
-        >
-          <div className="mb-6 text-sm text-slate-400">
-            <p>Need help with an order or listing?</p>
-            <a href="mailto:ameer@bidora.dev" className="mt-1 inline-block text-teal-300 hover:text-teal-100">ameer@bidora.dev</a>
-          </div>
-
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
-              &copy; 2026 Bidora. All rights reserved. Pakistan's Electronics Marketplace.
-            </motion.p>
-            <motion.div
-              animate={{ y: [0, -3, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="flex items-center gap-1 text-teal-400"
-            >
-              Made with <Heart size={16} className="fill-red-500 text-red-500" /> in Pakistan
-            </motion.div>
-          </div>
-        </motion.div>
+  return <footer className="bg-bidora-deep px-5 pb-7 pt-14 text-white sm:px-8 sm:pt-20">
+    <div className="mx-auto max-w-7xl">
+      <div className="mb-14 flex flex-col justify-between gap-8 border-b border-white/15 pb-12 md:flex-row md:items-end">
+        <div><p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-bidora-lime">Good tech deserves another life</p><h2 className="max-w-2xl text-3xl font-extrabold tracking-[-.05em] sm:text-5xl">Find a new favorite.<br /><span className="font-display font-medium italic text-bidora-lime">Or pass yours on.</span></h2></div>
+        <div className="flex flex-wrap gap-3"><a href="/search" className="inline-flex items-center gap-2 rounded-full bg-bidora-lime px-5 py-3 text-sm font-bold text-bidora-deep">Explore listings <ArrowRight size={16} /></a><a href="/create-listing" className="rounded-full border border-white/30 px-5 py-3 text-sm font-bold text-white hover:bg-white/10">Start selling</a></div>
       </div>
-    </footer>
-  )
+      <div className="grid grid-cols-2 gap-x-7 gap-y-9 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+        <div className="col-span-2 md:col-span-1"><a href="/" className="text-2xl font-black tracking-[-.06em]">bidora<span className="text-bidora-lime">.</span></a><p className="mt-3 max-w-xs text-sm leading-6 text-white/60">A thoughtful place to buy and sell electronics in Pakistan.</p></div>
+        {groups.map(group => <div key={group.title}><h3 className="mb-4 text-xs font-bold uppercase tracking-[.18em] text-white/50">{group.title}</h3><ul className="space-y-3">{group.links.map(([label, href]) => <li key={href}><a href={href} className="inline-flex items-center gap-2 text-sm text-white/80 transition hover:text-bidora-lime"><ArrowRight size={13} className="opacity-0 transition group-hover:opacity-100" />{label}</a></li>)}</ul></div>)}
+      </div>
+      <div className="mt-12 flex flex-col gap-3 border-t border-white/15 pt-5 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between"><p>© {new Date().getFullYear()} Bidora · Pakistan</p><p className="inline-flex items-center gap-1.5">Made with <Heart size={13} className="fill-bidora-coral text-bidora-coral" /> locally</p></div>
+    </div>
+  </footer>
 }

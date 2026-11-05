@@ -25,12 +25,16 @@ interface FilterOptions {
 export default function SearchPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState<FilterOptions>({
-    category: null,
-    minPrice: 0,
-    maxPrice: 1000000,
-    condition: null,
-    search: '',
+  const [filters, setFilters] = useState<FilterOptions>(() => {
+    const params = new URLSearchParams(window.location.search)
+    const categoryValue = Number(params.get('category'))
+    return {
+      category: Number.isInteger(categoryValue) && categoryValue >= 1 && categoryValue <= 6 ? categoryValue : null,
+      minPrice: 0,
+      maxPrice: 1000000,
+      condition: null,
+      search: params.get('q') || '',
+    }
   })
   const [showFilters, setShowFilters] = useState(false)
 

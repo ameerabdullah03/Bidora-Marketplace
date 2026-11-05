@@ -1,268 +1,60 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, Plus, LogOut, Home, MessageSquare, Heart } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowRight, Heart, Home, LogOut, Menu, MessageSquare, Plus, Search, X } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 export default function Header() {
-  const [searchQuery, setSearchQuery] = useState('')
+  const [query, setQuery] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const { user, profile, signOut } = useAuth()
-  const [showUserMenu, setShowUserMenu] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const userMenuRef = useRef<HTMLDivElement>(null)
-
+  const menuRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setShowUserMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    const close = (event: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
   }, [])
-
-  const handleSignOut = async () => {
-    await signOut()
-    window.location.href = '/'
+  const search = (event: React.FormEvent) => {
+    event.preventDefault()
+    if (query.trim()) window.location.href = `/search?q=${encodeURIComponent(query.trim())}`
   }
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`
-    }
-  }
-
-  return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-gray-200/50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3">
-        {/* Main Header */}
-        <div className="flex items-center justify-between gap-4">
-          {/* Logo */}
-          <motion.a
-            whileHover={{ scale: 1.05 }}
-            href="/"
-            className="flex items-center gap-2 shrink-0"
-          >
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="w-9 h-9 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg flex items-center justify-center text-white font-bold text-lg"
-            >
-              B
-            </motion.div>
-            <div className="hidden sm:block">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
-                Bidora
-              </h1>
-              <p className="text-xs text-gray-500 font-semibold">Discover. Bid. Buy.</p>
-            </div>
-          </motion.a>
-
-          {/* Desktop Search */}
-          <motion.div className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <motion.input
-                whileFocus={{ scale: 1.02 }}
-                type="text"
-                placeholder="Search products, auctions..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
-              />
-            </div>
-          </motion.div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => window.location.href = '/create-listing'}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
-                >
-                  <Plus size={18} />
-                  <span className="hidden lg:inline">New Listing</span>
-                </motion.button>
-
-                <div className="relative" ref={userMenuRef}>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 text-white rounded-full flex items-center justify-center font-bold hover:shadow-lg transition-all"
-                  >
-                    {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
-                  </motion.button>
-
-                  <AnimatePresence>
-                    {showUserMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200/50 backdrop-blur-xl py-2"
-                      >
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="font-semibold text-gray-900 text-sm">{profile?.full_name}</p>
-                          <p className="text-xs text-gray-500">{user?.email}</p>
-                          {profile?.account_type === 'seller' && (
-                            <motion.span
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="inline-block mt-2 px-2.5 py-1 bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-700 text-xs font-bold rounded-full"
-                            >
-                              ⭐ Seller Account
-                            </motion.span>
-                          )}
-                        </div>
-
-                        {[
-                          { icon: Home, label: 'Dashboard', href: '/dashboard' },
-                          { icon: MessageSquare, label: 'Messages', href: '/messages' },
-                          { icon: Heart, label: 'Saved Listings', href: '/favorites' },
-                        ].map((item, i) => (
-                          <motion.a
-                            key={i}
-                            whileHover={{ x: 4 }}
-                            href={item.href}
-                            onClick={() => setShowUserMenu(false)}
-                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-gray-700 text-sm transition-colors"
-                          >
-                            <item.icon size={16} className="text-teal-500" />
-                            {item.label}
-                          </motion.a>
-                        ))}
-
-                        <div className="border-t border-gray-100 mt-2">
-                          <motion.button
-                            whileHover={{ x: 4 }}
-                            onClick={() => {
-                              handleSignOut()
-                              setShowUserMenu(false)
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 text-sm transition-colors"
-                          >
-                            <LogOut size={16} />
-                            Sign Out
-                          </motion.button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </>
-            ) : (
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                href="/auth"
-                className="px-6 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
-              >
-                Sign In
-              </motion.a>
-            )}
+  const searchField = (compact = false) => <form onSubmit={search} role="search" className={`relative ${compact ? 'w-full' : 'hidden w-full max-w-md md:block'}`}>
+    <label htmlFor={compact ? 'mobile-search' : 'desktop-search'} className="sr-only">Search listings</label>
+    <Search size={17} aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 text-bidora-muted" />
+    <input id={compact ? 'mobile-search' : 'desktop-search'} value={query} onChange={e => setQuery(e.target.value)} placeholder="Search the marketplace" className="h-11 w-full rounded-full border border-bidora-ink/10 bg-white/75 pl-11 pr-12 text-sm text-bidora-ink placeholder:text-bidora-muted/80 focus:bg-white" />
+    <button aria-label="Submit search" className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-bidora-ink text-white hover:bg-bidora-deep"><ArrowRight size={15} /></button>
+  </form>
+  const links = [{ label: 'Explore', href: '/search' }, { label: 'Auctions', href: '/#live-auctions' }]
+  const closeMobile = () => setMobileOpen(false)
+  return <header className="sticky top-0 z-50 border-b border-bidora-ink/10 bg-bidora-paper/90 backdrop-blur-xl">
+    <div className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-3 sm:px-8">
+      <a href="/" aria-label="Bidora home" className="group flex shrink-0 items-center gap-2.5">
+        <span className="grid h-10 w-10 place-items-center rounded-[14px] bg-bidora-ink text-lg font-black text-bidora-lime transition-transform group-hover:-rotate-6">b.</span>
+        <span className="text-[21px] font-extrabold tracking-[-0.06em]">bidora<span className="text-bidora-coral">.</span></span>
+      </a>
+      {searchField()}
+      <nav aria-label="Main navigation" className="hidden items-center gap-6 lg:flex">
+        {links.map(link => <a key={link.href} className="text-sm font-semibold text-bidora-muted transition-colors hover:text-bidora-ink" href={link.href}>{link.label}</a>)}
+      </nav>
+      <div className="hidden items-center gap-3 md:flex">
+        {user ? <>
+          <a href="/create-listing" className="inline-flex h-10 items-center gap-2 rounded-full bg-bidora-lime px-4 text-sm font-bold text-bidora-ink transition-transform hover:-translate-y-0.5"><Plus size={16} /> Sell an item</a>
+          <div className="relative" ref={menuRef}>
+            <button aria-label="Open account menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)} className="grid h-10 w-10 place-items-center rounded-full border border-bidora-ink/15 bg-white font-bold text-bidora-ink">{profile?.full_name?.charAt(0).toUpperCase() || 'U'}</button>
+            <AnimatePresence>{menuOpen && <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }} className="absolute right-0 mt-3 w-60 rounded-2xl border border-bidora-ink/10 bg-white p-2 shadow-xl">
+              <div className="border-b border-bidora-ink/10 px-3 py-3"><p className="truncate text-sm font-bold">{profile?.full_name || 'Your account'}</p><p className="truncate text-xs text-bidora-muted">{user.email}</p></div>
+              {[[Home, 'Dashboard', '/dashboard'], [MessageSquare, 'Messages', '/messages'], [Heart, 'Saved listings', '/favorites']].map(([Icon, label, href]: any) => <a key={href} href={href} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-bidora-paper"><Icon size={16} />{label}</a>)}
+              <button onClick={async () => { await signOut(); window.location.href = '/' }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-700 hover:bg-red-50"><LogOut size={16} />Sign out</button>
+            </motion.div>}</AnimatePresence>
           </div>
-
-          {/* Mobile Menu Button */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </motion.button>
-        </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden mt-4 space-y-3 pb-4"
-            >
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
-              </div>
-
-              {user ? (
-                <>
-                  <motion.button
-                    whileHover={{ x: 4 }}
-                    onClick={() => {
-                      window.location.href = '/create-listing'
-                      setMobileMenuOpen(false)
-                    }}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-lg"
-                  >
-                    <Plus size={18} />
-                    New Listing
-                  </motion.button>
-                  <motion.a
-                    whileHover={{ x: 4 }}
-                    href="/dashboard"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <Home size={18} />
-                    Dashboard
-                  </motion.a>
-                  <motion.a
-                    whileHover={{ x: 4 }}
-                    href="/messages"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <MessageSquare size={18} />
-                    Messages
-                  </motion.a>
-                  <motion.a
-                    whileHover={{ x: 4 }}
-                    href="/favorites"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <Heart size={18} />
-                    Saved Listings
-                  </motion.a>
-                  <motion.button
-                    whileHover={{ x: 4 }}
-                    onClick={() => {
-                      handleSignOut()
-                      setMobileMenuOpen(false)
-                    }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <LogOut size={18} />
-                    Sign Out
-                  </motion.button>
-                </>
-              ) : (
-                <motion.a
-                  whileHover={{ scale: 1.02 }}
-                  href="/auth"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-lg"
-                >
-                  Sign In
-                </motion.a>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </> : <a href="/auth" className="inline-flex h-10 items-center gap-2 rounded-full bg-bidora-ink px-5 text-sm font-bold text-white transition hover:bg-bidora-deep">Sign in <ArrowRight size={15} /></a>}
       </div>
-    </header>
-  )
+      <button className="grid h-10 w-10 place-items-center rounded-full border border-bidora-ink/10 md:hidden" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button>
+    </div>
+    <AnimatePresence>{mobileOpen && <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden border-t border-bidora-ink/10 px-5 pb-5 md:hidden">
+      <div className="mx-auto max-w-7xl space-y-3 pt-4">{searchField(true)}<nav className="grid grid-cols-2 gap-2">{links.map(link => <a key={link.href} href={link.href} onClick={closeMobile} className="rounded-xl px-3 py-3 text-sm font-semibold hover:bg-white">{link.label}</a>)}</nav>
+        {user ? <div className="grid grid-cols-2 gap-2"><a href="/create-listing" onClick={closeMobile} className="rounded-xl bg-bidora-lime px-3 py-3 text-sm font-bold">＋ Sell an item</a><a href="/dashboard" onClick={closeMobile} className="rounded-xl bg-white px-3 py-3 text-sm font-semibold">My account</a><button onClick={async () => { await signOut(); window.location.href = '/' }} className="rounded-xl px-3 py-3 text-left text-sm text-red-700">Sign out</button></div> : <a href="/auth" onClick={closeMobile} className="block rounded-xl bg-bidora-ink px-4 py-3 text-center font-bold text-white">Sign in or join</a>}
+      </div>
+    </motion.div>}</AnimatePresence>
+  </header>
 }
