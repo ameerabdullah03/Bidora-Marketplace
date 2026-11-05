@@ -19,6 +19,10 @@ export default function SignUp({ onSuccess, onSwitchToLogin }: SignUpProps) {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (password.length < 8) {
+      setError('Use a password with at least 8 characters.')
+      return
+    }
     setError('')
     setSuccess('')
     setLoading(true)
@@ -108,6 +112,8 @@ export default function SignUp({ onSuccess, onSwitchToLogin }: SignUpProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  minLength={8}
+                  autoComplete="new-password"
                   className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   required
                 />
