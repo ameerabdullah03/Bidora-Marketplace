@@ -128,12 +128,14 @@ export default function CreateListing() {
           .getPublicUrl(fileName)
 
         // Save image reference to database
-        await supabase.from('product_images').insert({
+        const { error: imageRecordError } = await supabase.from('product_images').insert({
           product_id: productId,
           image_url: publicUrlData.publicUrl,
           storage_path: fileName,
           display_order: i,
         })
+
+        if (imageRecordError) throw imageRecordError
       }
 
       setSuccess('✅ Listing created successfully! Pending admin approval.')

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Star, Calendar, Mail } from 'lucide-react'
+import { Star, Calendar, Mail, MessageCircle, AlertCircle, Shield } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
 
 interface SellerInfo {
@@ -30,12 +31,11 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
 
   useEffect(() => {
     fetchSellerData()
-  }, [sellerId])
+  }, [sellerId, filter])
 
   const fetchSellerData = async () => {
     setLoading(true)
     try {
-      // Fetch seller info from auth.users via profiles
       const { data: sellerData, error: sellerError } = await supabase
         .from('profiles')
         .select('id, full_name, email, account_type, avg_rating, total_reviews, created_at')
@@ -45,7 +45,6 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
       if (sellerError) throw sellerError
       setSeller(sellerData)
 
-      // Fetch seller's products
       let query = supabase
         .from('products')
         .select('id, title, price, condition, rating, total_reviews, created_at')
@@ -66,124 +65,272 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
     }
   }
 
-  if (loading) return <div className="text-center py-12">Loading seller profile...</div>
-  if (!seller) return <div className="text-center py-12">Seller not found</div>
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 border-4 border-teal-200 border-t-teal-600 rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading seller profile...</p>
+        </motion.div>
+      </div>
+    )
+  }
+
+  if (!seller) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center bg-white p-12 rounded-2xl shadow-lg border border-gray-100"
+        >
+          <AlertCircle size={48} className="mx-auto mb-4 text-red-500" />
+          <p className="text-gray-900 text-xl font-semibold">Seller not found</p>
+          <p className="text-gray-600 mt-2">This seller profile may have been removed or is no longer available.</p>
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50">
       {/* Seller Header */}
-      <div className="bg-white shadow-sm border-b">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-teal-50 via-white to-cyan-50 border-b border-gray-100 shadow-sm"
+      >
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="flex items-start gap-6 mb-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
             {/* Avatar */}
-            <div className="w-24 h-24 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="w-24 h-24 bg-gradient-to-br from-teal-400 to-cyan-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg"
+            >
               {seller.full_name.charAt(0).toUpperCase()}
-            </div>
+            </motion.div>
 
             {/* Info */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{seller.full_name}</h1>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-1">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h1 className="text-4xl font-bold text-gray-900 mb-1">{seller.full_name}</h1>
+                  <div className="flex items-center gap-2">
+                    <Shield size={16} className="text-teal-600" />
+                    <span className="text-sm font-semibold text-teal-600 capitalize">
+                      Verified {seller.account_type || 'Seller'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rating */}
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-3 mb-4"
+              >
+                <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star
+                    <motion.div
                       key={i}
-                      size={18}
-                      className={i < Math.round(seller.avg_rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
-                    />
+                      initial={{ rotate: -180, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Star
+                        size={18}
+                        className={i < Math.round(seller.avg_rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                      />
+                    </motion.div>
                   ))}
                 </div>
-                <span className="text-gray-600 font-semibold">
+                <span className="font-bold text-gray-900">
                   {seller.avg_rating?.toFixed(1)} ({seller.total_reviews} reviews)
                 </span>
-              </div>
+              </motion.div>
+
+              {/* Contact Info */}
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
-                  <Calendar size={16} />
-                  <span>Member since {new Date(seller.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</span>
+                  <Calendar size={16} className="text-teal-600" />
+                  <span>Member since {new Date(seller.created_at).toLocaleDateString('en-PK', { year: 'numeric', month: 'long' })}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Mail size={16} />
+                  <Mail size={16} className="text-teal-600" />
                   <span>{seller.email}</span>
                 </div>
               </div>
             </div>
 
             {/* Action */}
-            <button className="btn-primary px-6 py-2">Contact Seller</button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-bold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            >
+              <MessageCircle size={20} />
+              Contact Seller
+            </motion.button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">Total Listings</p>
-              <p className="text-2xl font-bold text-teal-600">{products.length}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">Response Rate</p>
-              <p className="text-2xl font-bold text-teal-600">95%</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">Positive Feedback</p>
-              <p className="text-2xl font-bold text-teal-600">{Math.round(seller.avg_rating * 20)}%</p>
-            </div>
-          </div>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            <motion.div
+              variants={itemVariants}
+              whileHover={{ y: -4 }}
+              className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
+            >
+              <p className="text-sm text-gray-600 mb-2 font-semibold">Total Listings</p>
+              <p className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                {products.length}
+              </p>
+            </motion.div>
+            <motion.div
+              variants={itemVariants}
+              whileHover={{ y: -4 }}
+              className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
+            >
+              <p className="text-sm text-gray-600 mb-2 font-semibold">Response Rate</p>
+              <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                95%
+              </p>
+            </motion.div>
+            <motion.div
+              variants={itemVariants}
+              whileHover={{ y: -4 }}
+              className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
+            >
+              <p className="text-sm text-gray-600 mb-2 font-semibold">Positive Feedback</p>
+              <p className="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                {Math.round(seller.avg_rating * 20)}%
+              </p>
+            </motion.div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Listings Section */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Active Listings</h2>
-          <div className="flex gap-2">
-            <button
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8"
+        >
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-1">Seller Listings</h2>
+            <p className="text-gray-600">Browse all products from this seller</p>
+          </div>
+          <div className="flex gap-2 mt-4 md:mt-0">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setFilter('active')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-6 py-2.5 rounded-lg font-semibold transition-all ${
                 filter === 'active'
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Active
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-6 py-2.5 rounded-lg font-semibold transition-all ${
                 filter === 'all'
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               All
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {products.length === 0 ? (
-          <div className="bg-white rounded-lg p-12 text-center text-gray-600">
-            No products found
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-16 text-center shadow-md border border-gray-100"
+          >
+            <AlertCircle size={48} className="mx-auto mb-4 text-gray-300" />
+            <p className="text-xl font-semibold text-gray-900">No products found</p>
+            <p className="text-gray-600 mt-2">This seller doesn't have any listings yet</p>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map(product => (
-              <div key={product.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
-                <div className="bg-gray-200 h-40 flex items-center justify-center text-gray-400">
-                  Image
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {products.map((product) => (
+              <motion.div
+                key={product.id}
+                variants={itemVariants}
+                whileHover={{ y: -8 }}
+                onClick={() => window.location.href = `/product?id=${product.id}`}
+                className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all overflow-hidden cursor-pointer group border border-gray-100"
+              >
+                <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-48 flex items-center justify-center text-gray-400 group-hover:scale-105 transition-transform">
+                  📦
                 </div>
                 <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2">{product.title}</h3>
-                  <p className="text-xl font-bold text-teal-600 mb-2">Rs. {product.price.toLocaleString()}</p>
-                  <div className="flex items-center justify-between mb-4 text-sm">
-                    <span className="text-gray-600">★ {product.rating?.toFixed(1)}</span>
-                    <span className="bg-gray-100 px-2 py-1 rounded capitalize text-xs">
+                  <h3 className="font-semibold text-gray-900 line-clamp-2 mb-3 group-hover:text-teal-600 transition-colors">
+                    {product.title}
+                  </h3>
+
+                  <p className="text-2xl font-bold text-teal-600 mb-3">
+                    Rs. {product.price.toLocaleString()}
+                  </p>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-1">
+                      <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-semibold text-gray-900">{product.rating?.toFixed(1)}</span>
+                      <span className="text-xs text-gray-500">({product.total_reviews})</span>
+                    </div>
+                    <span className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full capitalize">
                       {product.condition}
                     </span>
                   </div>
-                  <button className="w-full btn-primary py-2 text-sm">View Details</button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all text-sm"
+                  >
+                    View Details
+                  </motion.button>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
