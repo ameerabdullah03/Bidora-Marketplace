@@ -92,9 +92,8 @@ export const placeBid = async (auctionId: string, amount: number) => {
   const user = await getCurrentUser()
   if (!user) throw new Error('Not authenticated')
 
-  return await supabase.from('bids').insert({
-    auction_id: auctionId,
-    bidder_id: user.id,
-    amount,
+  return await supabase.rpc('place_auction_bid', {
+    p_auction_id: auctionId,
+    p_amount: amount,
   })
 }
