@@ -189,7 +189,7 @@ export default function SignUp({ onSuccess, onSwitchToLogin }: SignUpProps) {
 
           {/* Footer */}
           <p className="text-xs text-dark-500 text-center mt-6">
-            By signing up, you agree to our Terms of Service and Privacy Policy
+            Your account is secured with Supabase Auth.
           </p>
         </div>
       </div>

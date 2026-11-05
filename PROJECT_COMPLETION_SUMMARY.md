@@ -1,9 +1,20 @@
-# Bidora Marketplace - Complete MVP Summary
+# Bidora Marketplace - Completion Status
 
-**Project Status**: MVP flows implemented; backend setup and production integrations remain
+**Project Status**: Core application flows are implemented; live backend setup, acceptance, and launch configuration remain
 **Last Updated**: 2026-11-05
 **Repository**: https://github.com/ameerabdullah03/Bidora-Marketplace  
-**Build Status**: Zero Errors | 2110 modules | 548KB gzipped | <900ms build time
+**Current source of truth**: `README.md`, `DATABASE_SETUP.md`, and the code on `main`. Build size and timing vary by commit and environment.
+
+## Current verified scope
+
+- The frontend implements authentication, fixed-price listings, auctions, favorites, buyer/seller orders, messaging, reviews, and admin moderation.
+- Checkout currently supports cash on delivery. JazzCash, EasyPaisa, and card payments are unavailable until merchant credentials and server-side callbacks are implemented.
+- The production database setup is not complete until the correct SQL path in `DATABASE_SETUP.md` is applied, the `listing-images` bucket is configured, and the first admin is provisioned.
+- A read-only Supabase API check on 2026-11-05 found `users`, `products`, `auctions`, and `orders` available, while `public_profiles`, `admins`, and `favorites` returned 404. The current marketplace migration still needs to be applied to the live project.
+- Build success alone does not verify live database behavior. Run the documented real-account acceptance checks after Supabase setup.
+- Hosting, email/SMS delivery, and payment-provider credentials are external launch tasks.
+
+The sections below are historical notes from an earlier implementation session. They describe work reported at that time and are not a current completion checklist; some component counts, build metrics, or feature labels may be stale.
 
 ---
 

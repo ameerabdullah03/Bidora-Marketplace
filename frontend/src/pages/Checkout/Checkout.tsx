@@ -21,6 +21,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
   const [step, setStep] = useState(1)
   const [paymentMethod, setPaymentMethod] = useState('cod')
   const [deliveryAddress, setDeliveryAddress] = useState('')
+  const [orderAcknowledged, setOrderAcknowledged] = useState(false)
   const [loading, setLoading] = useState(false)
   const [orderCreated, setOrderCreated] = useState(false)
   const [orderId, setOrderId] = useState('')
@@ -95,6 +96,10 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
     }
     if (!deliveryAddress.trim()) {
       setError('Please enter a delivery address')
+      return
+    }
+    if (!orderAcknowledged) {
+      setError('Please confirm the cash-on-delivery details before placing your order.')
       return
     }
 
@@ -575,24 +580,21 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
                     </div>
                   </motion.div>
 
-                  {/* Terms */}
+                  {/* Cash-on-delivery acknowledgement */}
                   <motion.label
                     variants={itemVariants}
                     className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg"
                   >
                     <input
                       type="checkbox"
+                      checked={orderAcknowledged}
+                      onChange={(event) => {
+                        setOrderAcknowledged(event.target.checked)
+                        setError('')
+                      }}
                       className="mt-1.5 w-5 h-5 text-teal-600 rounded cursor-pointer"
                     />
-                    <span className="text-sm text-gray-700">
-                      I agree to the{' '}
-                      <a href="#" className="text-teal-600 font-semibold hover:underline">
-                        Terms of Service
-                      </a>{' '}
-                      and{' '}
-                      <a href="#" className="text-teal-600 font-semibold hover:underline">
-                        Privacy Policy
-                      </a>
+                    <span className="text-sm text-gray-700">I confirm this order and understand that payment is due in cash when the order is delivered.
                     </span>
                   </motion.label>
                 </div>

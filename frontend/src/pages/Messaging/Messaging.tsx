@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Send, X, Phone, Video } from 'lucide-react'
+import { Send, X } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -28,6 +28,7 @@ export default function Messaging() {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [messageError, setMessageError] = useState('')
 
   useEffect(() => {
     if (user?.id) {
@@ -63,12 +64,21 @@ export default function Messaging() {
         .order('last_message_at', { ascending: false, nullsFirst: false })
 
       if (error) throw error
-      const mappedConversations = (data || []).map(conv => ({
-        ...conv,
-        participant_id: conv.buyer_id === user?.id ? conv.seller_id : conv.buyer_id,
-        participant_name: ((conv.buyer_id === user?.id ? conv.seller : conv.buyer) as any)?.full_name || 'Unknown',
-        updated_at: conv.last_message_at || '',
-        unread_count: 0,
+      const mappedConversations = await Promise.all((data || []).map(async (conv) => {
+        const { count, error: unreadError } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('conversation_id', conv.id)
+          .neq('sender_id', user!.id)
+          .eq('is_read', false)
+        if (unreadError) console.error('Error fetching unread message count:', unreadError)
+        return {
+          ...conv,
+          participant_id: conv.buyer_id === user?.id ? conv.seller_id : conv.buyer_id,
+          participant_name: ((conv.buyer_id === user?.id ? conv.seller : conv.buyer) as any)?.full_name || 'Unknown',
+          updated_at: conv.last_message_at || '',
+          unread_count: count || 0,
+        }
       }))
       setConversations(mappedConversations)
     } catch (err) {
@@ -137,11 +147,16 @@ export default function Messaging() {
       setMessages(mappedMessages)
 
       // Mark messages as read
-      await supabase
+      const { error: markReadError } = await supabase
         .from('messages')
         .update({ is_read: true })
         .eq('conversation_id', selectedConversation)
         .neq('sender_id', user?.id)
+      if (!markReadError) {
+        setConversations((current) => current.map((conversation) => conversation.id === selectedConversation
+          ? { ...conversation, unread_count: 0 }
+          : conversation))
+      }
     } catch (err) {
       console.error('Error fetching messages:', err)
     }
@@ -151,6 +166,7 @@ export default function Messaging() {
     if (!newMessage.trim() || !selectedConversation) return
 
     try {
+      setMessageError('')
       const { error } = await supabase.from('messages').insert({
         conversation_id: selectedConversation,
         sender_id: user?.id,
@@ -162,6 +178,7 @@ export default function Messaging() {
       fetchMessages()
     } catch (err) {
       console.error('Error sending message:', err)
+      setMessageError('Could not send this message. Please try again.')
     }
   }
 
@@ -215,15 +232,9 @@ export default function Messaging() {
               <h2 className="font-semibold text-gray-900">
                 {conversations.find(c => c.id === selectedConversation)?.participant_name}
               </h2>
-              <p className="text-xs text-gray-600">Active now</p>
+              <p className="text-xs text-gray-600">Bidora messages</p>
             </div>
             <div className="flex gap-2">
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <Phone size={20} className="text-gray-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <Video size={20} className="text-gray-600" />
-              </button>
               <button
                 onClick={() => setSelectedConversation(null)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors md:hidden"
@@ -259,18 +270,20 @@ export default function Messaging() {
 
           {/* Input */}
           <div className="p-4 border-t border-gray-200">
+            {messageError && <p role="alert" className="mb-2 text-sm text-red-700">{messageError}</p>}
             <div className="flex gap-2">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
                 placeholder="Type a message..."
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
               />
               <button
                 onClick={sendMessage}
-                className="bg-teal-600 text-white hover:bg-teal-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                disabled={!newMessage.trim()}
+                className="bg-teal-600 text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Send size={18} />
               </button>

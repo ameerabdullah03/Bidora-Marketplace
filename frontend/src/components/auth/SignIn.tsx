@@ -11,6 +11,7 @@ export default function SignIn({ onSuccess, onSwitchToSignUp }: SignInProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [forgotPassword, setForgotPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -43,6 +44,24 @@ export default function SignIn({ onSuccess, onSwitchToSignUp }: SignInProps) {
     }
   }
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setLoading(true)
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?mode=recover`,
+      })
+      if (resetError) throw resetError
+      setSuccess('If an account exists for this email, a password reset link is on its way.')
+    } catch (err: any) {
+      setError(err.message || 'Could not send a password reset email.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-teal-600 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -55,7 +74,8 @@ export default function SignIn({ onSuccess, onSwitchToSignUp }: SignInProps) {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSignIn} className="space-y-4">
+          <form onSubmit={forgotPassword ? handlePasswordReset : handleSignIn} className="space-y-4">
+            {forgotPassword && <p className="text-sm text-gray-600">Enter your account email and we’ll send a secure password reset link.</p>}
             {/* Email */}
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">Email</label>
@@ -73,7 +93,7 @@ export default function SignIn({ onSuccess, onSwitchToSignUp }: SignInProps) {
             </div>
 
             {/* Password */}
-            <div>
+            {!forgotPassword && <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">Password</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-3 text-gray-400" />
@@ -93,18 +113,14 @@ export default function SignIn({ onSuccess, onSwitchToSignUp }: SignInProps) {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-            </div>
+            </div>}
 
             {/* Remember & Forgot */}
-            <div className="flex justify-between items-center text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4" />
-                <span className="text-gray-600">Remember me</span>
-              </label>
-              <a href="#" className="text-teal-600 hover:text-teal-700 font-medium">
+            {!forgotPassword && <div className="flex justify-end items-center text-sm">
+              <button type="button" onClick={() => { setForgotPassword(true); setError(''); setSuccess('') }} className="text-teal-600 hover:text-teal-700 font-medium">
                 Forgot password?
-              </a>
-            </div>
+              </button>
+            </div>}
 
             {/* Error Message */}
             {error && (
@@ -126,9 +142,11 @@ export default function SignIn({ onSuccess, onSwitchToSignUp }: SignInProps) {
               disabled={loading}
               className="w-full btn-primary py-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? (forgotPassword ? 'Sending…' : 'Signing In...') : (forgotPassword ? 'Send Reset Link' : 'Sign In')}
             </button>
           </form>
+
+          {forgotPassword && <button type="button" onClick={() => { setForgotPassword(false); setError(''); setSuccess('') }} className="mt-3 w-full text-sm text-teal-700 hover:underline">Back to sign in</button>}
 
           {/* Divider */}
           <div className="my-6 flex items-center gap-4">
@@ -147,7 +165,7 @@ export default function SignIn({ onSuccess, onSwitchToSignUp }: SignInProps) {
 
           {/* Footer */}
           <p className="text-xs text-gray-500 text-center mt-6">
-            By signing in, you agree to our Terms of Service and Privacy Policy
+            Your account is secured with Supabase Auth.
           </p>
         </div>
       </div>

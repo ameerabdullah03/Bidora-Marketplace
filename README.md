@@ -95,8 +95,8 @@ Bidora/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/YOUR_USERNAME/Bidora-Marketplace.git
-cd Bidora
+git clone https://github.com/ameerabdullah03/Bidora-Marketplace.git
+cd Bidora-Marketplace
 ```
 
 2. **Install frontend dependencies**
@@ -117,7 +117,10 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 - Select your project → Settings → API
 - Copy Project URL and Anon Key
 
-4. **Start development server**
+4. **Set up Supabase**
+Follow [`DATABASE_SETUP.md`](DATABASE_SETUP.md). For a fresh project, apply `database/schema.sql` then `database/rls-policies.sql`; for an existing canonical installation, follow the migration path in that guide. Never run the legacy simplified schema over live data.
+
+5. **Start development server**
 ```bash
 npm run dev
 ```
@@ -126,12 +129,7 @@ Your app will be available at **http://localhost:5173**
 
 ## 📚 Database Setup
 
-The canonical database schema is `database/schema.sql`. To set it up:
-
-1. Open your Supabase dashboard
-2. Go to **SQL Editor** → **New Query**
-3. Copy and paste the contents of `database/schema.sql`
-4. Click **Run**
+See [`DATABASE_SETUP.md`](DATABASE_SETUP.md) for the safe fresh-install and existing-project paths. A new project needs both `database/schema.sql` and `database/rls-policies.sql` applied in that order.
 
 **Tables created:**
 - `users` (marketplace profiles tied to Supabase Auth)
@@ -148,8 +146,7 @@ The canonical database schema is `database/schema.sql`. To set it up:
 - `conversations` (messaging)
 - `messages` (in-app chat)
 
-After creating the schema, apply `database/rls-policies.sql`. Do not use the legacy `schema-simplified.sql` for a new installation.
-To use the moderation panel, follow `ADMIN_SETUP.md` to grant an administrator account.
+Do not use the legacy `schema-simplified.sql` for a new installation. Follow [`ADMIN_SETUP.md`](ADMIN_SETUP.md) to grant the first administrator after the database is ready.
 
 ## 🔑 Key Features Explained
 
@@ -157,7 +154,7 @@ To use the moderation panel, follow `ADMIN_SETUP.md` to grant an administrator a
 - Sign up as buyer or seller
 - Email/password authentication via Supabase
 - User context provides auth state globally
-- Protected routes for dashboards and listings
+- Seller and admin pages check account/session access before enabling their actions
 
 ### Product Listings
 - Sellers create listings with title, description, price
@@ -273,22 +270,21 @@ For issues, questions, or feedback:
 - Open an issue on GitHub
 - Contact: ameer@bidora.dev
 
-## 🎯 Next Steps
+## 🚀 Remaining launch setup
 
-1. Apply the canonical schema and RLS SQL in `database/` to the Supabase project.
-2. Create the public `listing-images` bucket and grant the first admin using `ADMIN_SETUP.md`.
-3. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in local and hosting environments.
-4. Run buyer/seller/admin acceptance checks against the configured Supabase project.
-5. Configure a payment provider and server-side callbacks before enabling online payment methods.
-6. Configure deployment credentials and publish the frontend to Cloudflare Pages.
+1. Apply the correct SQL path in [`DATABASE_SETUP.md`](DATABASE_SETUP.md), create the `listing-images` bucket, configure auth redirects, and provision an administrator.
+2. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` locally and in the hosting environment.
+3. Run buyer, seller, auction, messaging, order, and admin acceptance checks with real Supabase accounts.
+4. Configure hosting and deploy the frontend.
+5. Integrate a payment provider through trusted server callbacks before enabling online payments. Email and SMS notifications also need provider configuration.
 
 ## 📊 Metrics
 
 **Current Status:**
 - Core marketplace, seller, admin, auction, checkout, and messaging pages are implemented
-- Production build passes; Vite reports a large JavaScript chunk warning
+- Frontend TypeScript and Vite production build pass; route-based code splitting keeps the entry chunk below 500 KB
 - Cash-on-delivery order flow is implemented; online payment gateways are pending
-- Supabase schema/RLS application, storage bucket setup, first-admin provisioning, acceptance checks, and hosting configuration remain deployment steps
+- Live Supabase migration/setup, storage bucket creation, first-admin provisioning, real-account acceptance checks, and hosting configuration remain deployment steps
 
 **Goals (By Launch):**
 - 100+ daily active users

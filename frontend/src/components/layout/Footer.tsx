@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Share2, Mail, MessageSquare, Link2, Heart, ArrowRight } from 'lucide-react'
+import { Mail, Heart, ArrowRight } from 'lucide-react'
 
 export default function Footer() {
   const containerVariants = {
@@ -25,7 +25,7 @@ export default function Footer() {
   return (
     <footer className="bg-gradient-to-b from-slate-900 to-slate-950 text-white pt-20 pb-8">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Newsletter Section */}
+        {/* Marketplace call to action */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -34,24 +34,12 @@ export default function Footer() {
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <h3 className="text-2xl font-bold mb-2">Subscribe to Bidora Updates</h3>
-              <p className="text-slate-300">Get the latest deals, auction alerts, and exclusive offers.</p>
+              <h3 className="text-2xl font-bold mb-2">Find your next great deal</h3>
+              <p className="text-slate-300">Browse approved listings or start selling on Bidora.</p>
             </div>
-            <div className="flex w-full md:w-auto gap-2">
-              <motion.input
-                whileFocus={{ scale: 1.02 }}
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-lg outline-none text-gray-900 bg-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-lg px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 whitespace-nowrap"
-              >
-                <Mail size={18} />
-                Subscribe
-              </motion.button>
+            <div className="flex w-full md:w-auto gap-3">
+              <a href="/search" className="rounded-lg bg-teal-600 px-5 py-3 text-center font-semibold text-white hover:bg-teal-700">Browse listings</a>
+              <a href="/create-listing" className="rounded-lg border border-teal-300 px-5 py-3 text-center font-semibold text-teal-100 hover:bg-white/10">Start selling</a>
             </div>
           </div>
         </motion.div>
@@ -75,35 +63,23 @@ export default function Footer() {
             <p className="text-sm text-slate-400 leading-relaxed">
               Pakistan's trusted marketplace for electronics. Buy and sell with confidence.
             </p>
-            <div className="flex gap-3 pt-2">
-              {[
-                { icon: Share2, label: 'Facebook' },
-                { icon: Mail, label: 'Email' },
-                { icon: MessageSquare, label: 'Twitter' },
-                { icon: Link2, label: 'LinkedIn' },
-              ].map((social, i) => (
-                <motion.a
-                  key={i}
-                  whileHover={{ scale: 1.1, y: -3 }}
-                  href="#"
-                  className="p-2.5 bg-teal-500/20 hover:bg-teal-500/40 border border-teal-500/30 rounded-lg transition-all"
-                  title={social.label}
-                >
-                  <social.icon size={16} className="text-teal-300" />
-                </motion.a>
-              ))}
-            </div>
+            <a href="mailto:ameer@bidora.dev" className="inline-flex items-center gap-2 pt-2 text-sm text-teal-300 hover:text-teal-100"><Mail size={16} /> Contact Bidora</a>
           </motion.div>
 
           {/* For Buyers */}
           <motion.div variants={itemVariants}>
             <h4 className="font-bold mb-4 text-lg">For Buyers</h4>
             <ul className="space-y-3 text-sm text-slate-400">
-              {['Browse Products', 'Live Auctions', 'How to Bid', 'Buyer Protection', 'Payment Methods'].map((item, i) => (
+              {[
+                { label: 'Browse Products', href: '/search' },
+                { label: 'Live Auctions', href: '/search?type=auction' },
+                { label: 'Saved Listings', href: '/favorites' },
+                { label: 'My Orders', href: '/orders' },
+              ].map((item, i) => (
                 <motion.li key={i} whileHover={{ x: 4 }} className="transition-transform">
-                  <a href="#" className="hover:text-teal-300 transition-colors flex items-center gap-2">
-                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100" />
-                    {item}
+                  <a href={item.href} className="group flex items-center gap-2 hover:text-teal-300 transition-colors">
+                    <ArrowRight size={14} className="opacity-70" />
+                    {item.label}
                   </a>
                 </motion.li>
               ))}
@@ -114,11 +90,16 @@ export default function Footer() {
           <motion.div variants={itemVariants}>
             <h4 className="font-bold mb-4 text-lg">For Sellers</h4>
             <ul className="space-y-3 text-sm text-slate-400">
-              {['Start Selling', 'Seller Dashboard', 'Pricing & Fees', 'Seller Tools', 'Seller Protection'].map((item, i) => (
+              {[
+                { label: 'Create a Listing', href: '/create-listing' },
+                { label: 'Seller Dashboard', href: '/dashboard' },
+                { label: 'Manage Orders', href: '/orders' },
+                { label: 'Messages', href: '/messages' },
+              ].map((item, i) => (
                 <motion.li key={i} whileHover={{ x: 4 }} className="transition-transform">
-                  <a href="#" className="hover:text-teal-300 transition-colors flex items-center gap-2">
-                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100" />
-                    {item}
+                  <a href={item.href} className="group flex items-center gap-2 hover:text-teal-300 transition-colors">
+                    <ArrowRight size={14} className="opacity-70" />
+                    {item.label}
                   </a>
                 </motion.li>
               ))}
@@ -129,11 +110,15 @@ export default function Footer() {
           <motion.div variants={itemVariants}>
             <h4 className="font-bold mb-4 text-lg">Support</h4>
             <ul className="space-y-3 text-sm text-slate-400">
-              {['Help Center', 'Contact Us', 'FAQs', 'Report Issue', 'Community'].map((item, i) => (
+              {[
+                { label: 'Email Support', href: 'mailto:ameer@bidora.dev' },
+                { label: 'Sign In', href: '/auth' },
+                { label: 'Browse Listings', href: '/search' },
+              ].map((item, i) => (
                 <motion.li key={i} whileHover={{ x: 4 }} className="transition-transform">
-                  <a href="#" className="hover:text-teal-300 transition-colors flex items-center gap-2">
-                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100" />
-                    {item}
+                  <a href={item.href} className="group flex items-center gap-2 hover:text-teal-300 transition-colors">
+                    <ArrowRight size={14} className="opacity-70" />
+                    {item.label}
                   </a>
                 </motion.li>
               ))}
@@ -148,37 +133,9 @@ export default function Footer() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="border-t border-slate-800 pt-8"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="space-y-2 text-sm text-slate-400">
-              <p className="font-semibold text-white">Legal</p>
-              <div className="flex flex-wrap gap-4">
-                {['Terms of Service', 'Privacy Policy', 'Cookie Policy'].map((item, i) => (
-                  <motion.a
-                    key={i}
-                    whileHover={{ color: '#06B6D4' }}
-                    href="#"
-                    className="hover:text-cyan-400 transition-colors"
-                  >
-                    {item}
-                  </motion.a>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2 text-sm text-slate-400">
-              <p className="font-semibold text-white">Company</p>
-              <div className="flex flex-wrap gap-4">
-                {['About Us', 'Blog', 'Careers'].map((item, i) => (
-                  <motion.a
-                    key={i}
-                    whileHover={{ color: '#06B6D4' }}
-                    href="#"
-                    className="hover:text-cyan-400 transition-colors"
-                  >
-                    {item}
-                  </motion.a>
-                ))}
-              </div>
-            </div>
+          <div className="mb-6 text-sm text-slate-400">
+            <p>Need help with an order or listing?</p>
+            <a href="mailto:ameer@bidora.dev" className="mt-1 inline-block text-teal-300 hover:text-teal-100">ameer@bidora.dev</a>
           </div>
 
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">

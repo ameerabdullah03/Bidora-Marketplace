@@ -1,6 +1,10 @@
 # Bidora Database Setup Guide
 
-## Step 1: Execute the Schema SQL
+## Choose the right setup path
+
+Use exactly one path below. Never run setup SQL over an existing production database without a backup.
+
+### New Supabase project
 
 1. Go to your Supabase dashboard: https://app.supabase.com
 2. Select your **Bidora** project
@@ -11,13 +15,17 @@
 7. Click **Run** (or press Ctrl+Enter)
 8. Wait for it to complete (you'll see green checkmarks)
 
-This is the canonical schema for the application. Do not run `schema-simplified.sql`; it is a legacy reference and omits the foreign keys used by the live RLS policies.
+`database/schema.sql` is the canonical schema. It creates the tables, auth-profile trigger, security-definer order/bid functions, ratings triggers, and seed categories. It does **not** enable RLS on all tables; applying the RLS script is required before using the app.
 
-If you already ran the simplified schema, back up your project and apply a reviewed migration before continuing. Do not rerun either schema over live data.
+Do not run `database/schema-simplified.sql`; it is a legacy reference. If a simplified schema was installed previously, stop and prepare a project-specific migration after backing up the data. Do not run either setup path over that database.
 
-If the canonical schema is already installed, run `database/migrations/2026-11-05-marketplace-core.sql` instead of rerunning the base schema or RLS file. This upgrade adds the profile trigger, favorites/admin tables, secure order/bid functions, rating/message triggers, and updated policies.
+### Existing canonical installation
 
-## Step 2: Execute the RLS Policies SQL
+Use this path only when `database/schema.sql` **and** the baseline `database/rls-policies.sql` have already been applied. Back up the project, then run `database/migrations/2026-11-05-marketplace-core.sql` once. It upgrades the existing canonical installation with profile backfill, favorites/admin tables, atomic marketplace functions, rating/message triggers, and the current policy definitions.
+
+If only `schema.sql` was applied, finish the new-project steps below before using the app. The RLS script is a one-time setup script and is not intended to be rerun over an installation that already has policies.
+
+## New-project Step 2: Apply the RLS Policies SQL
 
 1. In the same **SQL Editor**, click **New Query** again
 2. Copy the entire contents of `D:\Bidora\database\rls-policies.sql`
@@ -25,13 +33,13 @@ If the canonical schema is already installed, run `database/migrations/2026-11-0
 4. Click **Run**
 5. Wait for completion
 
-This secures your database with Row-Level Security policies.
+This enables Row-Level Security and installs the policies required by the frontend. Run it after `schema.sql`.
 
 To enable listing moderation, follow `ADMIN_SETUP.md` to grant the first administrator. Admin access is not granted automatically.
 
 ## Step 3: Verify the Setup
 
-After both scripts run successfully:
+After the selected SQL path completes successfully:
 
 1. Go to **Table Editor** (left sidebar)
 2. You should see these tables:
@@ -51,6 +59,8 @@ After both scripts run successfully:
 
 3. Click on **categories** → you should see 6 categories pre-loaded (Phones, Laptops, Audio, etc.)
 
+Also verify the `public_profiles` view is available and these RPCs appear in the Supabase API schema: `place_auction_bid`, `place_product_order`, `place_auction_order`, and `advance_order_status`. The frontend needs these objects for public seller details, favorites/admin features, bidding, and order workflows.
+
 ## Step 4: Configure Supabase Storage for Images
 
 1. Go to **Storage** (left sidebar)
@@ -59,29 +69,20 @@ After both scripts run successfully:
 4. Make it **Public** (toggle on)
 5. Click **Create bucket**
 
-This bucket will store product images.
+This bucket stores product images. SQL policies restrict writes to authenticated sellers and their own product folders; public read access is required for listing images.
 
-## Step 5: Test Authentication (Optional)
+## Step 5: Configure Authentication
 
-To verify your auth is working:
+1. In Supabase **Authentication → URL Configuration**, add your local and production app URLs to the allowed redirect URLs.
+2. Include `{APP_ORIGIN}/auth?mode=recover` so password reset links return to Bidora.
+3. Enable the Email provider and configure production email delivery before launch.
+4. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `frontend/.env.local` and in the hosting environment. Never put a service-role key in the frontend.
 
-1. Go to **Authentication** (left sidebar)
-2. You should see the **Providers** tab
-3. Email/Password is enabled by default
-
-## What's Next
-
-Once you've executed both SQL scripts and verified the tables exist:
-
-1. I'll create an authentication UI (Login/Sign Up pages)
-2. We'll integrate the seller dashboard
-3. Connect the homepage to real product data from your database
-4. Build the product listing form
-5. Test end-to-end workflow
+For moderation, create and verify the administrator account, then follow `ADMIN_SETUP.md`. Admin membership is not granted automatically.
 
 ## Important Notes
 
-- The schema includes Row-Level Security (RLS) policies
+- Both the schema and RLS policies are required for a new installation
 - Users can only see approved products or their own products
 - Sellers can only modify their own listings
 - Bidders can only place bids on active auctions
@@ -92,7 +93,5 @@ Once you've executed both SQL scripts and verified the tables exist:
 If you get an error:
 - Check that you're in the **SQL Editor** (not the Table Editor)
 - Make sure you copied the entire SQL script
-- If a table already exists, the `IF NOT EXISTS` clause will skip it
+- Do not treat `IF NOT EXISTS` as a migration mechanism; it does not update existing table definitions
 - Check the error message at the bottom of the editor
-
-Once complete, reply with: "✅ Database schema and RLS policies are set up!"
