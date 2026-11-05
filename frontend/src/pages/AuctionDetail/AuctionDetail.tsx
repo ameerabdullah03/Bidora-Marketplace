@@ -78,6 +78,7 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
       setBidHistory(mappedBids)
       setAuction({
         ...data,
+        current_bid: Number(data.total_bids > 0 ? data.current_bid : data.starting_price),
         title: (data.product as any)?.title || 'Auction listing',
         seller_name: (data.seller as any)?.full_name || 'Seller',
         bid_count: Number(data.total_bids || 0),
@@ -125,7 +126,7 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
     }
 
     const bid = parseFloat(bidAmount)
-    const minBid = Math.max(auction.starting_price, auction.current_bid + auction.minimum_increment)
+    const minBid = auction.bid_count === 0 ? auction.starting_price : auction.current_bid + auction.minimum_increment
 
     if (bid < minBid) {
       setError(`Minimum bid is Rs. ${minBid.toLocaleString()}`)
@@ -365,7 +366,7 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
                           setBidAmount(e.target.value)
                           setError('')
                         }}
-                        placeholder={`Min: ${Math.max(auction.starting_price, auction.current_bid + auction.minimum_increment).toLocaleString()}`}
+                        placeholder={`Min: ${(auction.bid_count === 0 ? auction.starting_price : auction.current_bid + auction.minimum_increment).toLocaleString()}`}
                         className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
                       />
                     </div>

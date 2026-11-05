@@ -1,7 +1,7 @@
 # Bidora Marketplace - Complete MVP Summary
 
-**Project Status**: ✅ Production-Ready  
-**Completion Date**: 2026-11-01  
+**Project Status**: MVP flows implemented; backend setup and production integrations remain
+**Last Updated**: 2026-11-05
 **Repository**: https://github.com/ameerabdullah03/Bidora-Marketplace  
 **Build Status**: Zero Errors | 2110 modules | 548KB gzipped | <900ms build time
 
@@ -202,7 +202,8 @@ Features:
 
 ### Payments & Orders
 ✅ 3-step checkout flow  
-✅ 4 payment methods (COD, JazzCash, EasyPaisa, Card)  
+✅ Cash-on-delivery checkout
+⏳ JazzCash, EasyPaisa, and card integrations (merchant credentials and server callbacks required)
 ✅ Order tracking  
 ✅ Order status management  
 ✅ Order confirmation  
@@ -324,7 +325,11 @@ Build Warnings: 1 (chunk size - non-critical)
 
 ---
 
-## 💡 Next Steps for Full Production
+## 💡 Remaining Work for Production
+
+The website currently supports cash-on-delivery checkout. JazzCash, EasyPaisa, and card options are marked as coming soon because they require merchant accounts and trusted server-side payment callbacks. Do not treat the frontend payment selection as a completed gateway integration.
+
+Before launch, apply the canonical `database/schema.sql` and `database/rls-policies.sql` to Supabase, create the `listing-images` bucket, provision an administrator with `ADMIN_SETUP.md`, configure deployment environment variables, and complete real-account acceptance checks.
 
 ### Phase 1: Payment Integration
 ```bash
@@ -392,10 +397,10 @@ D:\Bidora\
 
 ## 🎉 Summary
 
-**Bidora Marketplace MVP is now complete and production-ready.**
+**Bidora's marketplace MVP flows are implemented. Production launch still requires Supabase setup, payment integrations, acceptance checks, and deployment configuration.**
 
 - **15 components** built with React 18 + TypeScript
-- **10 database tables** with RLS protection
+- **13 database tables** with RLS protection
 - **Zero build errors** in strict TypeScript mode
 - **Real database integration** for all main features
 - **Fully responsive** design (mobile/tablet/desktop)

@@ -339,7 +339,10 @@ BEGIN
     RAISE EXCEPTION 'Auction is no longer active';
   END IF;
 
-  v_minimum := GREATEST(v_auction.starting_price, v_auction.current_bid + v_auction.minimum_increment);
+  v_minimum := CASE
+    WHEN v_auction.total_bids = 0 THEN v_auction.starting_price
+    ELSE v_auction.current_bid + v_auction.minimum_increment
+  END;
   IF p_amount < v_minimum THEN
     RAISE EXCEPTION 'Minimum bid is %', v_minimum;
   END IF;

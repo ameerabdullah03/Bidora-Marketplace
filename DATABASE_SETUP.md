@@ -44,6 +44,8 @@ After both scripts run successfully:
    - reports
    - conversations
    - messages
+   - admins
+   - favorites
 
 3. Click on **categories** → you should see 6 categories pre-loaded (Phones, Laptops, Audio, etc.)
 

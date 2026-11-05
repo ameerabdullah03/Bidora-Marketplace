@@ -147,7 +147,7 @@ export default function CreateListing() {
           product_id: productId,
           seller_id: user.id,
           starting_price: formData.price,
-          current_bid: formData.price,
+          current_bid: 0,
           minimum_increment: 1000,
           start_time: startsAt.toISOString(),
           end_time: endsAt.toISOString(),

@@ -1,17 +1,17 @@
 # Bidora - Pakistan's Electronics Marketplace
 
-Pakistan's premier electronics marketplace combining classifieds and auctions. Buy, sell, and bid on electronics with confidence.
+An electronics marketplace for Pakistan combining fixed-price listings and timed auctions.
 
 **Tagline**: Discover. Bid. Buy.
 
 ## 🚀 Features
 
 ### For Buyers
-- Browse thousands of electronics listings
+- Browse approved electronics listings
 - Search and filter by category, price, condition
 - Participate in timed auctions
 - Direct messaging with sellers
-- Secure transactions with buyer protection
+- Cash-on-delivery order flow with seller fulfillment and buyer delivery confirmation
 - Ratings and reviews system
 
 ### For Sellers
@@ -19,8 +19,7 @@ Pakistan's premier electronics marketplace combining classifieds and auctions. B
 - List products as fixed price or auction
 - Manage orders and inventory
 - Build seller reputation through ratings
-- Seller verification badges
-- Analytics dashboard
+- Seller dashboard with live listings, auctions, orders, and rating totals
 
 ### Platform Features
 - ✅ User authentication (email/password)
@@ -29,9 +28,11 @@ Pakistan's premier electronics marketplace combining classifieds and auctions. B
 - ✅ Responsive design (mobile, tablet, desktop)
 - ✅ Row-Level Security (RLS) for data protection
 - ✅ 6 electronics categories
-- ✅ Auction bidding system
+- ✅ Transaction-safe auction bidding and winner checkout
 - ✅ Order management
 - ✅ In-app messaging
+- ✅ Verified-purchase reviews and saved listings
+- ⏳ JazzCash, EasyPaisa, and card gateways (disabled until merchant setup)
 
 ## 🛠 Tech Stack
 
@@ -74,7 +75,8 @@ Bidora/
 │   └── package.json
 │
 ├── database/
-│   ├── schema-simplified.sql  (10 database tables)
+│   ├── schema.sql             (canonical schema, 13 tables)
+│   ├── schema-simplified.sql  (legacy reference)
 │   └── rls-policies.sql       (Security policies)
 │
 ├── docs/                      (Documentation)
@@ -132,6 +134,9 @@ The canonical database schema is `database/schema.sql`. To set it up:
 4. Click **Run**
 
 **Tables created:**
+- `users` (marketplace profiles tied to Supabase Auth)
+- `admins` (trusted moderators)
+- `favorites` (saved listings)
 - `categories` (6 electronics categories)
 - `products` (seller listings)
 - `product_images` (product photos)
@@ -208,13 +213,13 @@ To use the moderation panel, follow `ADMIN_SETUP.md` to grant an administrator a
 - Brand identity (Bidora colors)
 
 ### Sprint 2 ✅ Complete
-- Database (10 tables, RLS policies)
+- Database (13 tables, RLS policies)
 - User authentication (sign up/sign in)
 - Seller dashboard
 - Product listing form with image uploads
 - User context and header integration
 
-### Sprint 3 (Next)
+### Sprint 3 ✅ Complete
 - Admin panel for listing approval
 - Connect homepage to real database products
 - Product detail pages
@@ -222,13 +227,12 @@ To use the moderation panel, follow `ADMIN_SETUP.md` to grant an administrator a
 - Search and filter functionality
 - Seller profiles and ratings
 
-### Sprint 4+
+### Sprint 4 ✅ Core flows complete; external integrations pending
 - Messaging system
 - Order management
-- Payment integration (JazzCash, EasyPaisa, Bank Transfer)
-- Courier integrations
-- Admin moderation tools
-- React Native mobile app
+- Cash-on-delivery ordering and order fulfillment
+- Payment gateways (JazzCash, EasyPaisa, cards) require merchant credentials and server callbacks
+- Courier integrations and mobile apps are future work
 
 ## 🔒 Security Notes
 
@@ -271,22 +275,20 @@ For issues, questions, or feedback:
 
 ## 🎯 Next Steps
 
-1. **Test the app** at http://localhost:5173
-2. **Create test accounts** (buyer and seller)
-3. **Create test listings** with images
-4. **Build Sprint 3 features** (admin panel, real product display)
-5. **Deploy** frontend to Cloudflare Pages
+1. Apply the canonical schema and RLS SQL in `database/` to the Supabase project.
+2. Create the public `listing-images` bucket and grant the first admin using `ADMIN_SETUP.md`.
+3. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in local and hosting environments.
+4. Run buyer/seller/admin acceptance checks against the configured Supabase project.
+5. Configure a payment provider and server-side callbacks before enabling online payment methods.
+6. Configure deployment credentials and publish the frontend to Cloudflare Pages.
 
 ## 📊 Metrics
 
 **Current Status:**
-- ✅ 10 database tables
-- ✅ 10 React components
-- ✅ 4 main pages (Home, Auth, Dashboard, CreateListing)
-- ✅ Full authentication flow
-- ✅ Image upload pipeline
-- ✅ Responsive design
-- ✅ Row-Level Security
+- Core marketplace, seller, admin, auction, checkout, and messaging pages are implemented
+- Production build passes; Vite reports a large JavaScript chunk warning
+- Cash-on-delivery order flow is implemented; online payment gateways are pending
+- Supabase schema/RLS application, storage bucket setup, first-admin provisioning, acceptance checks, and hosting configuration remain deployment steps
 
 **Goals (By Launch):**
 - 100+ daily active users
