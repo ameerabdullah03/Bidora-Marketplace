@@ -11,6 +11,7 @@ interface Auction {
   bid_count: number
   end_time: string
   condition: string
+  image_url: string | null
 }
 
 export default function AuctionSection() {
@@ -33,7 +34,7 @@ export default function AuctionSection() {
     try {
       const { data, error } = await supabase
         .from('auctions')
-        .select('id, current_bid, starting_price, total_bids, end_time, product:products!auctions_product_id_fkey(title, condition)')
+        .select('id, current_bid, starting_price, total_bids, end_time, product:products!auctions_product_id_fkey(title, condition, images:product_images(image_url))')
         .eq('status', 'active')
         .eq('product.status', 'approved')
         .gt('end_time', new Date().toISOString())
@@ -45,6 +46,7 @@ export default function AuctionSection() {
         id: auction.id,
         title: auction.product?.title || 'Untitled auction',
         condition: auction.product?.condition || 'Used',
+        image_url: auction.product?.images?.[0]?.image_url || null,
         current_bid: Number(auction.current_bid || auction.starting_price),
         starting_price: Number(auction.starting_price),
         bid_count: Number(auction.total_bids || 0),
@@ -183,9 +185,11 @@ export default function AuctionSection() {
 
                     {/* Product Image Container */}
                     <div className="relative h-48 bg-gradient-to-br from-red-100 to-orange-100 overflow-hidden">
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-5xl group-hover:scale-110 transition-transform duration-300">
-                        📷
-                      </div>
+                      {auction.image_url ? (
+                        <img src={auction.image_url} alt={auction.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-5xl group-hover:scale-110 transition-transform duration-300">📷</div>
+                      )}
 
                       {/* Time Badge */}
                       <motion.div

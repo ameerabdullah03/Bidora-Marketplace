@@ -11,6 +11,7 @@ interface Product {
   rating: number
   total_reviews: number
   category_id: number
+  images: Array<{ image_url: string }>
 }
 
 interface FilterOptions {
@@ -42,7 +43,7 @@ export default function SearchPage() {
     try {
       let query = supabase
         .from('products')
-        .select('id, title, price, condition, rating, total_reviews, category_id')
+        .select('id, title, price, condition, rating, total_reviews, category_id, images:product_images(image_url)')
         .eq('status', 'approved')
         .gte('price', filters.minPrice)
         .lte('price', filters.maxPrice)
@@ -310,8 +311,8 @@ export default function SearchPage() {
                     onClick={() => window.location.href = `/product?id=${product.id}`}
                     className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all overflow-hidden cursor-pointer group"
                   >
-                    <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-48 flex items-center justify-center text-gray-400 group-hover:scale-105 transition-transform">
-                      📦
+                    <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-48 overflow-hidden">
+                      {product.images?.[0]?.image_url ? <img src={product.images[0].image_url} alt={product.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy" /> : <div className="h-full flex items-center justify-center text-gray-400">📦</div>}
                     </div>
 
                     <div className="p-4">

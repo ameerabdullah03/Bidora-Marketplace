@@ -10,6 +10,7 @@ interface Product {
   rating: number
   total_reviews: number
   condition: string
+  images: Array<{ image_url: string }>
 }
 
 export default function FeaturedProducts() {
@@ -24,7 +25,7 @@ export default function FeaturedProducts() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, title, price, rating, total_reviews, condition')
+        .select('id, title, price, rating, total_reviews, condition, images:product_images(image_url)')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
         .limit(8)
@@ -115,9 +116,11 @@ export default function FeaturedProducts() {
                   <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full flex flex-col">
                     {/* Product Image Container */}
                     <div className="relative h-48 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-5xl group-hover:scale-110 transition-transform duration-300">
-                        📱
-                      </div>
+                      {product.images?.[0]?.image_url ? (
+                        <img src={product.images[0].image_url} alt={product.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-5xl group-hover:scale-110 transition-transform duration-300">📱</div>
+                      )}
 
                       {/* Badge */}
                       <motion.div
