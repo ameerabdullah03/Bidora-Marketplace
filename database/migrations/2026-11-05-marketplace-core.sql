@@ -506,6 +506,14 @@ FOR EACH ROW EXECUTE FUNCTION public.enforce_write_rate_limit();
 DROP POLICY IF EXISTS "listing_images_insert_owned_product" ON storage.objects;
 DROP POLICY IF EXISTS "listing_images_update_owned_product" ON storage.objects;
 DROP POLICY IF EXISTS "listing_images_delete_owned_product" ON storage.objects;
+-- Remove permissive policies from the project’s older RLS setup. PostgreSQL
+-- combines permissive policies with OR, so leaving these in place would
+-- bypass the stricter seller, participant, and RPC-only checks below.
+DROP POLICY IF EXISTS "products_insert_auth" ON products;
+DROP POLICY IF EXISTS "auctions_insert_auth" ON auctions;
+DROP POLICY IF EXISTS "bids_insert_auth" ON bids;
+DROP POLICY IF EXISTS "conversations_insert_auth" ON conversations;
+DROP POLICY IF EXISTS "messages_insert_auth" ON messages;
 CREATE POLICY "listing_images_insert_owned_product" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id='listing-images' AND EXISTS(SELECT 1 FROM products WHERE products.id::text=(storage.foldername(name))[1] AND products.seller_id=auth.uid()));
 CREATE POLICY "listing_images_update_owned_product" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id='listing-images' AND EXISTS(SELECT 1 FROM products WHERE products.id::text=(storage.foldername(name))[1] AND products.seller_id=auth.uid())) WITH CHECK (bucket_id='listing-images' AND EXISTS(SELECT 1 FROM products WHERE products.id::text=(storage.foldername(name))[1] AND products.seller_id=auth.uid()));
 CREATE POLICY "listing_images_delete_owned_product" ON storage.objects FOR DELETE TO authenticated USING (bucket_id='listing-images' AND EXISTS(SELECT 1 FROM products WHERE products.id::text=(storage.foldername(name))[1] AND products.seller_id=auth.uid()));
