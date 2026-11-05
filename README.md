@@ -272,11 +272,11 @@ For issues, questions, or feedback:
 
 ## 🚀 Remaining launch setup
 
-1. Apply the correct SQL path in [`DATABASE_SETUP.md`](DATABASE_SETUP.md), create the `listing-images` bucket, configure auth redirects, and provision an administrator.
-2. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` locally and in the hosting environment.
-3. Run buyer, seller, auction, messaging, order, and admin acceptance checks with real Supabase accounts.
-4. Configure hosting and deploy the frontend.
-5. Integrate a payment provider through trusted server callbacks before enabling online payments. Email and SMS notifications also need provider configuration.
+1. The canonical marketplace migration and `listing-images` bucket configuration are applied and verified. Provision the first administrator and run buyer, seller, auction, messaging, order, and admin acceptance checks with real Supabase accounts.
+2. No Cloudflare Workers & Pages project is present in the connected account yet. Create a Pages project, build from `frontend` with `npm run build`, publish `dist`, then verify the deployed headers and public URL.
+3. Replace the local Supabase Auth Site URL with the deployed HTTPS origin and allowlist the exact recovery URL.
+4. Configure custom SMTP for public signup and recovery email, then verify delivery. The current dashboard rate limit is 2 Auth emails/hour; the built-in sender is not suitable for general public delivery.
+5. Integrate a payment provider through trusted server callbacks before enabling online payments. SMS notifications also need provider configuration.
 
 ## 📊 Metrics
 
@@ -284,7 +284,7 @@ For issues, questions, or feedback:
 - Core marketplace, seller, admin, auction, checkout, and messaging pages are implemented
 - Frontend TypeScript and Vite production build pass; route-based code splitting keeps the entry chunk below 500 KB
 - Cash-on-delivery order flow is implemented; online payment gateways are pending
-- Live Supabase migration/setup, storage bucket creation, first-admin provisioning, real-account acceptance checks, and hosting configuration remain deployment steps
+- Live Supabase migration and storage bucket setup are verified; first-admin provisioning, real-account acceptance checks, Cloudflare Pages deployment, production Auth URLs, and custom SMTP remain launch steps
 
 **Goals (By Launch):**
 - 100+ daily active users
