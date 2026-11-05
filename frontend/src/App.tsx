@@ -18,6 +18,7 @@ import Messaging from './pages/Messaging/Messaging'
 import AuctionDetail from './pages/AuctionDetail/AuctionDetail'
 import Orders from './pages/Orders/Orders'
 import Checkout from './pages/Checkout/Checkout'
+import Favorites from './pages/Favorites/Favorites'
 
 function HomePage() {
   return (
@@ -68,6 +69,8 @@ function AppContent() {
       setCurrentPage('auction')
     } else if (path === '/orders') {
       setCurrentPage('orders')
+    } else if (path === '/favorites') {
+      setCurrentPage('favorites')
     } else if (path === '/checkout') {
       setCurrentPage('checkout')
     } else {
@@ -177,6 +180,10 @@ function AppContent() {
         <Footer />
       </>
     )
+  }
+
+  if (currentPage === 'favorites') {
+    return <><Header /><Favorites /><Footer /></>
   }
 
   if (currentPage === 'checkout') {

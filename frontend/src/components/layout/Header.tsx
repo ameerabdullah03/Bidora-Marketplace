@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, Plus, LogOut, Home, MessageSquare } from 'lucide-react'
+import { Search, Menu, X, Plus, LogOut, Home, MessageSquare, Heart } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -121,6 +121,7 @@ export default function Header() {
                         {[
                           { icon: Home, label: 'Dashboard', href: '/dashboard' },
                           { icon: MessageSquare, label: 'Messages', href: '/messages' },
+                          { icon: Heart, label: 'Saved Listings', href: '/favorites' },
                         ].map((item, i) => (
                           <motion.a
                             key={i}
@@ -226,6 +227,15 @@ export default function Header() {
                   >
                     <MessageSquare size={18} />
                     Messages
+                  </motion.a>
+                  <motion.a
+                    whileHover={{ x: 4 }}
+                    href="/favorites"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Heart size={18} />
+                    Saved Listings
                   </motion.a>
                   <motion.button
                     whileHover={{ x: 4 }}
