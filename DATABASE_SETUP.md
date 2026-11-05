@@ -11,7 +11,9 @@
 7. Click **Run** (or press Ctrl+Enter)
 8. Wait for it to complete (you'll see green checkmarks)
 
-This creates all your database tables and inserts the initial categories.
+This is the canonical schema for the application. Do not run `schema-simplified.sql`; it is a legacy reference and omits the foreign keys used by the live RLS policies.
+
+If you already ran the simplified schema, back up your project and apply a reviewed migration before continuing. Do not rerun either schema over live data.
 
 ## Step 2: Execute the RLS Policies SQL
 

@@ -124,11 +124,11 @@ Your app will be available at **http://localhost:5173**
 
 ## 📚 Database Setup
 
-The database schema is ready in `database/schema-simplified.sql`. To set it up:
+The canonical database schema is `database/schema.sql`. To set it up:
 
 1. Open your Supabase dashboard
 2. Go to **SQL Editor** → **New Query**
-3. Copy and paste the contents of `database/schema-simplified.sql`
+3. Copy and paste the contents of `database/schema.sql`
 4. Click **Run**
 
 **Tables created:**
@@ -143,7 +143,7 @@ The database schema is ready in `database/schema-simplified.sql`. To set it up:
 - `conversations` (messaging)
 - `messages` (in-app chat)
 
-Row-Level Security (RLS) policies are applied to all tables for data protection.
+After creating the schema, apply `database/rls-policies.sql`. Do not use the legacy `schema-simplified.sql` for a new installation.
 
 ## 🔑 Key Features Explained
 

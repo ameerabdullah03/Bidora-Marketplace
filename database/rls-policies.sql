@@ -59,7 +59,14 @@ CREATE POLICY "products_view_own"
 -- Sellers can create products
 CREATE POLICY "products_insert_seller"
   ON products FOR INSERT
-  WITH CHECK (auth.uid() = seller_id AND account_type = 'seller');
+  WITH CHECK (
+    auth.uid() = seller_id
+    AND EXISTS (
+      SELECT 1 FROM users
+      WHERE users.id = auth.uid()
+        AND users.account_type = 'seller'
+    )
+  );
 
 -- Sellers can update their own products
 CREATE POLICY "products_update_own"

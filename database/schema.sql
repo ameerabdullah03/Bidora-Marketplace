@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   seller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  category_id BIGINT NOT NULL REFERENCES categories(id) ON DELETE SET NULL,
+  category_id BIGINT REFERENCES categories(id) ON DELETE SET NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
   price DECIMAL(12, 2) NOT NULL,
