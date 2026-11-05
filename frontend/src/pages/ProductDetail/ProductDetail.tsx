@@ -2,6 +2,15 @@ import { useState, useEffect } from 'react'
 import { Star, MapPin, Shield, MessageCircle, Heart, Share2, Check, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
+import { useAuth } from '../../hooks/useAuth'
+
+interface ProductReview {
+  id: number
+  rating: number
+  content: string | null
+  created_at: string
+  reviewer: { full_name: string } | null
+}
 
 interface ProductDetail {
   id: string
@@ -22,15 +31,128 @@ interface ProductDetail {
 }
 
 export default function ProductDetail({ productId }: { productId: string }) {
+  const { user } = useAuth()
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
   const [reviewText, setReviewText] = useState('')
   const [isFavorite, setIsFavorite] = useState(false)
+  const [favoriteMessage, setFavoriteMessage] = useState('')
+  const [shareMessage, setShareMessage] = useState('')
+  const [reviews, setReviews] = useState<ProductReview[]>([])
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewError, setReviewError] = useState('')
+  const [reviewSuccess, setReviewSuccess] = useState('')
+  const [reviewLoading, setReviewLoading] = useState(false)
 
   useEffect(() => {
     fetchProduct()
   }, [productId])
+
+  useEffect(() => {
+    fetchReviews()
+  }, [productId])
+
+  useEffect(() => {
+    if (!user) {
+      setIsFavorite(false)
+      return
+    }
+    supabase.from('favorites').select('product_id').eq('user_id', user.id).eq('product_id', productId).maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('Error checking favorite:', error)
+        setIsFavorite(Boolean(data))
+      })
+  }, [productId, user?.id])
+
+  const toggleFavorite = async () => {
+    setFavoriteMessage('')
+    if (!user) {
+      setFavoriteMessage('Sign in to save this listing.')
+      return
+    }
+    const result = isFavorite
+      ? await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', productId)
+      : await supabase.from('favorites').insert({ user_id: user.id, product_id: productId })
+    if (result.error) {
+      setFavoriteMessage(result.error.message)
+      return
+    }
+    setIsFavorite(!isFavorite)
+  }
+
+  const shareProduct = async () => {
+    const url = window.location.href
+    try {
+      if (navigator.share) await navigator.share({ title: product?.title || 'Bidora listing', url })
+      else {
+        await navigator.clipboard.writeText(url)
+        setShareMessage('Link copied')
+        window.setTimeout(() => setShareMessage(''), 2000)
+      }
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) setShareMessage('Could not share this link.')
+    }
+  }
+
+  const fetchReviews = async () => {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('id, rating, content, created_at, reviewer:users!reviews_reviewer_id_fkey(full_name)')
+      .eq('product_id', productId)
+      .eq('is_seller_review', true)
+      .order('created_at', { ascending: false })
+    if (error) {
+      console.error('Error fetching reviews:', error)
+      return
+    }
+    setReviews((data || []) as unknown as ProductReview[])
+  }
+
+  const submitReview = async () => {
+    setReviewError('')
+    setReviewSuccess('')
+    if (!user) {
+      setReviewError('Sign in to review a purchase.')
+      return
+    }
+    if (!reviewText.trim()) {
+      setReviewError('Write a short review before posting.')
+      return
+    }
+    setReviewLoading(true)
+    try {
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('buyer_id', user.id)
+        .eq('product_id', productId)
+        .eq('order_status', 'delivered')
+        .limit(1)
+        .maybeSingle()
+      if (orderError) throw orderError
+      if (!order) throw new Error('Reviews are available after your order is marked delivered.')
+
+      const { error: insertError } = await supabase.from('reviews').insert({
+        order_id: order.id,
+        reviewer_id: user.id,
+        reviewed_user_id: product?.seller_id,
+        product_id: productId,
+        rating: reviewRating,
+        content: reviewText.trim(),
+        is_seller_review: true,
+      })
+      if (insertError) throw insertError
+      setReviewText('')
+      setReviewSuccess('Thanks, your review has been posted.')
+      await fetchReviews()
+      await fetchProduct()
+    } catch (err) {
+      setReviewError(err instanceof Error ? err.message : 'Could not post your review.')
+    } finally {
+      setReviewLoading(false)
+    }
+  }
 
   const fetchProduct = async () => {
     try {
@@ -168,7 +290,8 @@ export default function ProductDetail({ productId }: { productId: string }) {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsFavorite(!isFavorite)}
+                    onClick={toggleFavorite}
+                    aria-label={isFavorite ? 'Remove from saved listings' : 'Save listing'}
                     className="p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all"
                   >
                     <Heart
@@ -179,11 +302,15 @@ export default function ProductDetail({ productId }: { productId: string }) {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={shareProduct}
+                    aria-label="Share listing"
                     className="p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all"
                   >
                     <Share2 size={20} className="text-gray-600" />
                   </motion.button>
                 </div>
+                {favoriteMessage && <p role="status" className="absolute top-16 right-4 rounded bg-white px-3 py-2 text-sm shadow">{favoriteMessage}</p>}
+                {shareMessage && <p role="status" className="absolute top-28 right-4 rounded bg-white px-3 py-2 text-sm shadow">{shareMessage}</p>}
               </motion.div>
 
               {/* Thumbnails */}
@@ -368,6 +495,19 @@ export default function ProductDetail({ productId }: { productId: string }) {
             className="mb-12 pb-8 border-b border-gray-200"
           >
             <label className="block text-sm font-semibold text-gray-900 mb-3">Share your experience</label>
+            <div className="flex gap-1 mb-3" role="group" aria-label="Rating">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <button
+                  key={rating}
+                  type="button"
+                  onClick={() => setReviewRating(rating)}
+                  aria-label={`${rating} star${rating === 1 ? '' : 's'}`}
+                  className="p-1"
+                >
+                  <Star size={22} className={rating <= reviewRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />
+                </button>
+              ))}
+            </div>
             <motion.textarea
               whileFocus={{ scale: 1.02 }}
               value={reviewText}
@@ -376,22 +516,47 @@ export default function ProductDetail({ productId }: { productId: string }) {
               className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all resize-none"
               rows={4}
             />
+            {reviewError && <p className="mt-2 text-sm text-red-600" role="alert">{reviewError}</p>}
+            {reviewSuccess && <p className="mt-2 text-sm text-green-700" role="status">{reviewSuccess}</p>}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={submitReview}
+              disabled={reviewLoading}
               className="mt-4 px-6 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
             >
               <Check size={16} className="inline mr-2" />
-              Post Review
+              {reviewLoading ? 'Posting…' : 'Post Review'}
             </motion.button>
           </motion.div>
 
           {/* Reviews List */}
-          <div className="text-center py-12 text-gray-600 bg-gradient-to-b from-gray-50 to-white rounded-xl border border-gray-100">
-            <Star size={32} className="mx-auto mb-3 text-gray-300" />
-            <p className="text-lg font-semibold">No reviews yet</p>
-            <p className="text-sm mt-1">Be the first to review this product!</p>
-          </div>
+          {reviews.length === 0 ? (
+            <div className="text-center py-12 text-gray-600 bg-gradient-to-b from-gray-50 to-white rounded-xl border border-gray-100">
+              <Star size={32} className="mx-auto mb-3 text-gray-300" />
+              <p className="text-lg font-semibold">No reviews yet</p>
+              <p className="text-sm mt-1">Reviews are available after a completed delivery.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <article key={review.id} className="rounded-xl border border-gray-100 bg-gray-50 p-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="font-semibold text-gray-900">{review.reviewer?.full_name || 'Buyer'}</p>
+                    <time className="text-xs text-gray-500" dateTime={review.created_at}>
+                      {new Date(review.created_at).toLocaleDateString('en-PK')}
+                    </time>
+                  </div>
+                  <div className="flex gap-0.5 my-2" aria-label={`${review.rating} out of 5 stars`}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} size={15} className={star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 whitespace-pre-wrap">{review.content}</p>
+                </article>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

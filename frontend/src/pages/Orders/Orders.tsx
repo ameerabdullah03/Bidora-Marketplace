@@ -7,6 +7,7 @@ interface Order {
   id: string
   product_id: string
   product_title: string
+  buyer_id: string
   seller_id: string
   seller_name: string
   price: number
@@ -15,6 +16,7 @@ interface Order {
   payment_method: string
   payment_status: 'pending' | 'completed' | 'failed'
   delivery_address: string
+  tracking_number: string | null
   created_at: string
   updated_at: string
 }
@@ -25,6 +27,8 @@ export default function Orders() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'shipped' | 'delivered'>('all')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [trackingDrafts, setTrackingDrafts] = useState<Record<string, string>>({})
+  const [actionError, setActionError] = useState('')
 
   useEffect(() => {
     fetchOrders()
@@ -56,6 +60,25 @@ export default function Orders() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const advanceOrder = async (order: Order, nextStatus: 'confirmed' | 'shipped' | 'delivered' | 'cancelled') => {
+    setActionError('')
+    const trackingNumber = trackingDrafts[order.id]?.trim()
+    if (nextStatus === 'shipped' && !trackingNumber) {
+      setActionError(`Add tracking details before shipping order ${order.id}.`)
+      return
+    }
+    const { error } = await supabase.rpc('advance_order_status', {
+      p_order_id: order.id,
+      p_new_status: nextStatus,
+      p_tracking_number: nextStatus === 'shipped' ? trackingNumber : null,
+    })
+    if (error) {
+      setActionError(error.message)
+      return
+    }
+    await fetchOrders()
   }
 
   const getStatusColor = (status: Order['status']) => {
@@ -100,6 +123,7 @@ export default function Orders() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
           <p className="text-gray-600">Track and manage your purchases and sales</p>
         </div>
+        {actionError && <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{actionError}</div>}
 
         {/* Filters */}
         <div className="mb-6 flex flex-wrap gap-2">
@@ -165,6 +189,7 @@ export default function Orders() {
                   <div className="mb-4 p-3 bg-gray-50 rounded">
                     <p className="text-sm text-gray-600 mb-1">Delivery Address</p>
                     <p className="text-gray-900">{order.delivery_address}</p>
+                    {order.tracking_number && <p className="mt-2 text-sm text-teal-700">Tracking: {order.tracking_number}</p>}
                   </div>
 
                   {/* Timeline */}
@@ -187,9 +212,21 @@ export default function Orders() {
                     >
                       View Details
                     </button>
-                    <button className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-                      Track
-                    </button>
+                    {order.seller_id === user?.id && order.status === 'pending' && (
+                      <button onClick={() => advanceOrder(order, 'confirmed')} className="flex-1 px-4 py-2 border border-teal-600 text-teal-700 rounded-lg hover:bg-teal-50 font-medium">Confirm order</button>
+                    )}
+                    {order.seller_id === user?.id && order.status === 'confirmed' && (
+                      <div className="flex flex-1 gap-2">
+                        <input aria-label="Tracking details" value={trackingDrafts[order.id] || ''} onChange={(e) => setTrackingDrafts({ ...trackingDrafts, [order.id]: e.target.value })} placeholder="Tracking number" className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3" />
+                        <button onClick={() => advanceOrder(order, 'shipped')} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium">Mark shipped</button>
+                      </div>
+                    )}
+                    {order.buyer_id === user?.id && order.status === 'shipped' && (
+                      <button onClick={() => advanceOrder(order, 'delivered')} className="flex-1 px-4 py-2 border border-green-600 text-green-700 rounded-lg hover:bg-green-50 font-medium">Confirm delivery</button>
+                    )}
+                    {(order.status === 'pending') && (
+                      <button onClick={() => advanceOrder(order, 'cancelled')} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">Cancel</button>
+                    )}
                   </div>
                 </div>
               </div>

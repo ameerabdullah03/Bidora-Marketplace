@@ -6,6 +6,7 @@
 -- ============================================
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
@@ -16,6 +17,48 @@ ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+-- Sellers may write image objects only under folders for their own products.
+CREATE POLICY "listing_images_insert_owned_product"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'listing-images'
+    AND EXISTS (
+      SELECT 1 FROM products
+      WHERE products.id::text = (storage.foldername(name))[1]
+        AND products.seller_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "listing_images_update_owned_product"
+  ON storage.objects FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'listing-images'
+    AND EXISTS (
+      SELECT 1 FROM products
+      WHERE products.id::text = (storage.foldername(name))[1]
+        AND products.seller_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    bucket_id = 'listing-images'
+    AND EXISTS (
+      SELECT 1 FROM products
+      WHERE products.id::text = (storage.foldername(name))[1]
+        AND products.seller_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "listing_images_delete_owned_product"
+  ON storage.objects FOR DELETE TO authenticated
+  USING (
+    bucket_id = 'listing-images'
+    AND EXISTS (
+      SELECT 1 FROM products
+      WHERE products.id::text = (storage.foldername(name))[1]
+        AND products.seller_id = auth.uid()
+    )
+  );
 
 -- ============================================
 -- USERS TABLE POLICIES
@@ -38,6 +81,18 @@ CREATE POLICY "users_insert_authenticated"
 
 CREATE POLICY "admins_view_self"
   ON admins FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE POLICY "favorites_view_self"
+  ON favorites FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE POLICY "favorites_insert_self"
+  ON favorites FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "favorites_delete_self"
+  ON favorites FOR DELETE
   USING (user_id = auth.uid());
 
 -- ============================================
@@ -123,12 +178,30 @@ CREATE POLICY "product_images_insert"
 -- Anyone can view active auctions
 CREATE POLICY "auctions_view_active"
   ON auctions FOR SELECT
-  USING (status = 'active' OR seller_id = auth.uid());
+  USING (
+    seller_id = auth.uid()
+    OR (
+      status IN ('active', 'ended')
+      AND EXISTS (
+        SELECT 1 FROM products
+        WHERE products.id = auctions.product_id
+          AND products.status = 'approved'
+      )
+    )
+  );
 
 -- Sellers can create auctions
 CREATE POLICY "auctions_insert_seller"
   ON auctions FOR INSERT
-  WITH CHECK (auth.uid() = seller_id);
+  WITH CHECK (
+    auth.uid() = seller_id
+    AND EXISTS (
+      SELECT 1 FROM products
+      WHERE products.id = auctions.product_id
+        AND products.seller_id = auth.uid()
+        AND products.is_auction = true
+    )
+  );
 
 -- ============================================
 -- BIDS TABLE POLICIES
@@ -140,7 +213,12 @@ CREATE POLICY "bids_view_active"
     EXISTS (
       SELECT 1 FROM auctions
       WHERE auctions.id = bids.auction_id
-      AND auctions.status = 'active'
+        AND auctions.status IN ('active', 'ended')
+        AND EXISTS (
+          SELECT 1 FROM products
+          WHERE products.id = auctions.product_id
+            AND products.status = 'approved'
+        )
     )
   );
 
@@ -158,15 +236,10 @@ CREATE POLICY "orders_view_own"
   USING (buyer_id = auth.uid() OR seller_id = auth.uid());
 
 -- Authenticated users can create orders
-CREATE POLICY "orders_insert_authenticated"
-  ON orders FOR INSERT
-  WITH CHECK (auth.uid() = buyer_id);
+DROP POLICY IF EXISTS "orders_insert_authenticated" ON orders;
 
 -- Buyer and seller can update their orders
-CREATE POLICY "orders_update_own"
-  ON orders FOR UPDATE
-  USING (buyer_id = auth.uid() OR seller_id = auth.uid())
-  WITH CHECK (buyer_id = auth.uid() OR seller_id = auth.uid());
+DROP POLICY IF EXISTS "orders_update_own" ON orders;
 
 -- ============================================
 -- REVIEWS TABLE POLICIES
@@ -177,9 +250,21 @@ CREATE POLICY "reviews_view_all"
   USING (true);
 
 -- Authenticated users can create reviews
-CREATE POLICY "reviews_insert_authenticated"
+DROP POLICY IF EXISTS "reviews_insert_authenticated" ON reviews;
+CREATE POLICY "reviews_insert_verified_purchase"
   ON reviews FOR INSERT
-  WITH CHECK (auth.uid() = reviewer_id);
+  WITH CHECK (
+    auth.uid() = reviewer_id
+    AND is_seller_review = true
+    AND EXISTS (
+      SELECT 1 FROM orders
+      WHERE orders.id = reviews.order_id
+        AND orders.buyer_id = auth.uid()
+        AND orders.product_id = reviews.product_id
+        AND orders.seller_id = reviews.reviewed_user_id
+        AND orders.order_status = 'delivered'
+    )
+  );
 
 -- ============================================
 -- REPORTS TABLE POLICIES

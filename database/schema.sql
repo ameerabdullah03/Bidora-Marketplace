@@ -55,6 +55,13 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS favorites (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, product_id)
+);
+
 -- ============================================
 -- 2. CATEGORIES TABLE
 -- ============================================
@@ -89,6 +96,26 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   approved_at TIMESTAMP WITH TIME ZONE
 );
+
+CREATE OR REPLACE FUNCTION protect_listing_moderation_fields()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() = OLD.seller_id
+    AND NOT EXISTS (SELECT 1 FROM admins WHERE admins.user_id = auth.uid())
+    AND (NEW.status IS DISTINCT FROM OLD.status OR NEW.approved_at IS DISTINCT FROM OLD.approved_at) THEN
+    RAISE EXCEPTION 'Only marketplace admins can change listing moderation status';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER products_protect_moderation_fields
+BEFORE UPDATE ON products
+FOR EACH ROW EXECUTE FUNCTION protect_listing_moderation_fields();
 
 -- ============================================
 -- 4. PRODUCT IMAGES TABLE
@@ -170,6 +197,46 @@ CREATE TABLE IF NOT EXISTS reviews (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_one_seller_review_per_order
+  ON reviews(order_id, reviewer_id, is_seller_review);
+
+CREATE OR REPLACE FUNCTION refresh_marketplace_ratings()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_product_id UUID;
+  v_seller_id UUID;
+BEGIN
+  v_product_id := COALESCE(NEW.product_id, OLD.product_id);
+  v_seller_id := COALESCE(NEW.reviewed_user_id, OLD.reviewed_user_id);
+
+  IF v_product_id IS NOT NULL THEN
+    UPDATE products SET
+      rating = COALESCE((SELECT AVG(rating)::DECIMAL(3,2) FROM reviews WHERE product_id = v_product_id), 0),
+      total_reviews = (SELECT COUNT(*) FROM reviews WHERE product_id = v_product_id)
+    WHERE id = v_product_id;
+  END IF;
+
+  IF v_seller_id IS NOT NULL THEN
+    UPDATE users SET
+      rating = COALESCE((SELECT AVG(rating)::DECIMAL(3,2) FROM reviews WHERE reviewed_user_id = v_seller_id AND is_seller_review = true), 0),
+      total_reviews = (SELECT COUNT(*) FROM reviews WHERE reviewed_user_id = v_seller_id AND is_seller_review = true)
+    WHERE id = v_seller_id;
+  END IF;
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER reviews_refresh_ratings
+AFTER INSERT OR UPDATE OR DELETE ON reviews
+FOR EACH ROW EXECUTE FUNCTION refresh_marketplace_ratings();
 
 -- ============================================
 -- 9. REPORTS TABLE (for moderation)
@@ -333,6 +400,56 @@ $$;
 
 REVOKE ALL ON FUNCTION place_product_order(UUID, TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION place_product_order(UUID, TEXT) TO authenticated;
+
+CREATE OR REPLACE FUNCTION advance_order_status(
+  p_order_id UUID,
+  p_new_status TEXT,
+  p_tracking_number TEXT DEFAULT NULL
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_order orders%ROWTYPE;
+BEGIN
+  SELECT * INTO v_order FROM orders WHERE id = p_order_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Order not found'; END IF;
+
+  IF p_new_status = 'confirmed' THEN
+    IF auth.uid() <> v_order.seller_id OR v_order.order_status <> 'pending' THEN
+      RAISE EXCEPTION 'Only the seller can confirm a pending order';
+    END IF;
+  ELSIF p_new_status = 'shipped' THEN
+    IF auth.uid() <> v_order.seller_id OR v_order.order_status <> 'confirmed'
+      OR length(trim(coalesce(p_tracking_number, ''))) < 3 THEN
+      RAISE EXCEPTION 'Seller must provide tracking details for a confirmed order';
+    END IF;
+  ELSIF p_new_status = 'delivered' THEN
+    IF auth.uid() <> v_order.buyer_id OR v_order.order_status <> 'shipped' THEN
+      RAISE EXCEPTION 'Only the buyer can confirm a shipped order as delivered';
+    END IF;
+  ELSIF p_new_status = 'cancelled' THEN
+    IF auth.uid() NOT IN (v_order.buyer_id, v_order.seller_id) OR v_order.order_status <> 'pending' THEN
+      RAISE EXCEPTION 'Only a participant can cancel a pending order';
+    END IF;
+    UPDATE products SET stock_quantity = stock_quantity + 1 WHERE id = v_order.product_id;
+  ELSE
+    RAISE EXCEPTION 'Unsupported order status transition';
+  END IF;
+
+  UPDATE orders SET
+    order_status = p_new_status,
+    tracking_number = CASE WHEN p_new_status = 'shipped' THEN trim(p_tracking_number) ELSE tracking_number END,
+    updated_at = NOW(),
+    completed_at = CASE WHEN p_new_status = 'delivered' THEN NOW() ELSE completed_at END
+  WHERE id = p_order_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION advance_order_status(UUID, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION advance_order_status(UUID, TEXT, TEXT) TO authenticated;
 
 -- Keep the conversation preview current after a message is sent.
 CREATE OR REPLACE FUNCTION update_conversation_preview()

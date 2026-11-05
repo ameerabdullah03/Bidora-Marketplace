@@ -35,6 +35,8 @@ export default function AuctionSection() {
         .from('auctions')
         .select('id, current_bid, starting_price, total_bids, end_time, product:products!auctions_product_id_fkey(title, condition)')
         .eq('status', 'active')
+        .eq('product.status', 'approved')
+        .gt('end_time', new Date().toISOString())
         .order('end_time', { ascending: true })
         .limit(4)
 

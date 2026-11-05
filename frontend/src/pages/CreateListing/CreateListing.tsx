@@ -174,7 +174,7 @@ export default function CreateListing() {
 
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        window.location.href = '/seller-dashboard'
+        window.location.href = '/dashboard'
       }, 2000)
     } catch (err: any) {
       setError(err.message || 'Failed to create listing')

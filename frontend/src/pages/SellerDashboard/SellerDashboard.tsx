@@ -1,136 +1,175 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus, Package, DollarSign, Clock, TrendingUp } from 'lucide-react'
+import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
 
+interface Listing {
+  id: string
+  title: string
+  price: number
+  status: string
+  is_auction: boolean
+  created_at: string
+}
+
+interface SellerOrder {
+  id: string
+  amount: number
+  order_status: string
+  created_at: string
+  product: { title: string } | null
+}
+
+interface SellerAuction {
+  id: string
+  starting_price: number
+  current_bid: number
+  total_bids: number
+  end_time: string
+  product: { title: string } | null
+}
+
 export default function SellerDashboard() {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
   const [activeTab, setActiveTab] = useState<'overview' | 'listings' | 'auctions' | 'orders'>('overview')
+  const [listings, setListings] = useState<Listing[]>([])
+  const [auctions, setAuctions] = useState<SellerAuction[]>([])
+  const [orders, setOrders] = useState<SellerOrder[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    const loadDashboard = async () => {
+      setLoading(true)
+      setError('')
+      try {
+        const [productResult, auctionResult, orderResult] = await Promise.all([
+          supabase.from('products')
+            .select('id, title, price, status, is_auction, created_at')
+            .eq('seller_id', user.id)
+            .order('created_at', { ascending: false }),
+          supabase.from('auctions')
+            .select('id, starting_price, current_bid, total_bids, end_time, product:products!auctions_product_id_fkey(title)')
+            .eq('seller_id', user.id)
+            .order('end_time', { ascending: true }),
+          supabase.from('orders')
+            .select('id, amount, order_status, created_at, product:products!orders_product_id_fkey(title)')
+            .eq('seller_id', user.id)
+            .order('created_at', { ascending: false }),
+        ])
+        if (productResult.error) throw productResult.error
+        if (auctionResult.error) throw auctionResult.error
+        if (orderResult.error) throw orderResult.error
+        if (cancelled) return
+        setListings((productResult.data || []) as Listing[])
+        setAuctions((auctionResult.data || []) as unknown as SellerAuction[])
+        setOrders((orderResult.data || []) as unknown as SellerOrder[])
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load seller dashboard.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    void loadDashboard()
+    return () => { cancelled = true }
+  }, [user?.id])
 
   const stats = [
-    {
-      label: 'Active Listings',
-      value: '12',
-      icon: <Package size={24} className="text-blue-500" />,
-      bgColor: 'bg-blue-50',
-    },
-    {
-      label: 'Total Sales',
-      value: profile?.total_sales || '0',
-      icon: <DollarSign size={24} className="text-green-500" />,
-      bgColor: 'bg-green-50',
-    },
-    {
-      label: 'Active Auctions',
-      value: '3',
-      icon: <Clock size={24} className="text-orange-500" />,
-      bgColor: 'bg-orange-50',
-    },
-    {
-      label: 'Rating',
-      value: profile?.rating?.toFixed(1) || '0',
-      icon: <TrendingUp size={24} className="text-primary-500" />,
-      bgColor: 'bg-primary-50',
-    },
+    { label: 'Approved Listings', value: listings.filter((item) => item.status === 'approved').length, icon: <Package size={24} className="text-blue-500" />, bg: 'bg-blue-50' },
+    { label: 'Completed Sales', value: orders.filter((order) => order.order_status === 'delivered').length, icon: <DollarSign size={24} className="text-green-500" />, bg: 'bg-green-50' },
+    { label: 'Active Auctions', value: auctions.filter((auction) => new Date(auction.end_time) > new Date()).length, icon: <Clock size={24} className="text-orange-500" />, bg: 'bg-orange-50' },
+    { label: 'Seller Rating', value: Number(profile?.rating || 0).toFixed(1), icon: <TrendingUp size={24} className="text-teal-500" />, bg: 'bg-teal-50' },
   ]
+
+  const tabs = ['overview', 'listings', 'auctions', 'orders'] as const
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-dark-900">Seller Dashboard</h1>
-              <p className="text-dark-600 mt-1">Welcome back, {profile?.full_name}</p>
-            </div>
-            <button className="btn-primary flex items-center gap-2">
-              <Plus size={20} />
-              New Listing
-            </button>
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap justify-between items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Seller Dashboard</h1>
+            <p className="text-gray-600 mt-1">Welcome back, {profile?.full_name || 'Seller'}</p>
           </div>
+          <button onClick={() => window.location.href = '/create-listing'} className="btn-primary flex items-center gap-2">
+            <Plus size={20} /> New Listing
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Stats Grid */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {error && <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, idx) => (
-            <div key={idx} className="bg-white rounded-lg shadow p-6">
-              <div className={`${stat.bgColor} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
-                {stat.icon}
-              </div>
-              <p className="text-dark-600 text-sm font-medium">{stat.label}</p>
-              <p className="text-2xl font-bold text-dark-900 mt-1">{stat.value}</p>
+          {stats.map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl shadow-sm p-6">
+              <div className={`${stat.bg} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>{stat.icon}</div>
+              <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{loading ? '—' : stat.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="border-b border-gray-200">
-            <div className="flex">
-              {['overview', 'listings', 'auctions', 'orders'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as any)}
-                  className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
-                    activeTab === tab
-                      ? 'border-primary-500 text-primary-600'
-                      : 'border-transparent text-dark-600 hover:text-dark-900'
-                  }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tab Content */}
+        <section className="bg-white rounded-xl shadow-sm">
+          <nav className="flex overflow-x-auto border-b border-gray-200" aria-label="Seller dashboard sections">
+            {tabs.map((tab) => (
+              <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-4 font-medium text-sm border-b-2 capitalize ${activeTab === tab ? 'border-teal-600 text-teal-700' : 'border-transparent text-gray-600 hover:text-gray-900'}`}>
+                {tab}
+              </button>
+            ))}
+          </nav>
           <div className="p-6">
-            {activeTab === 'overview' && (
-              <div className="text-center py-12">
-                <Package size={48} className="mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-dark-900 mb-2">Getting Started</h3>
-                <p className="text-dark-600 mb-6">
-                  Create your first product listing to start selling on Bidora
-                </p>
-                <button className="btn-primary">Create Your First Listing</button>
-              </div>
-            )}
-
-            {activeTab === 'listings' && (
-              <div className="text-center py-12">
-                <Package size={48} className="mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-dark-900 mb-2">No Active Listings</h3>
-                <p className="text-dark-600">
-                  You haven't created any product listings yet
-                </p>
-              </div>
-            )}
-
-            {activeTab === 'auctions' && (
-              <div className="text-center py-12">
-                <Clock size={48} className="mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-dark-900 mb-2">No Active Auctions</h3>
-                <p className="text-dark-600">
-                  You haven't created any auctions yet
-                </p>
-              </div>
-            )}
-
-            {activeTab === 'orders' && (
-              <div className="text-center py-12">
-                <DollarSign size={48} className="mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-dark-900 mb-2">No Orders Yet</h3>
-                <p className="text-dark-600">
-                  Your orders will appear here once you start selling
-                </p>
-              </div>
+            {loading ? <p className="py-10 text-center text-gray-500">Loading your marketplace data…</p> : (
+              <>
+                {(activeTab === 'overview' || activeTab === 'listings') && (
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Your listings</h2>
+                    {listings.length === 0 ? <p className="py-8 text-center text-gray-500">No listings yet. Create your first listing to get started.</p> : (
+                      <div className="divide-y divide-gray-100">
+                        {listings.map((item) => (
+                          <div key={item.id} className="py-4 flex flex-wrap justify-between gap-3">
+                            <div><p className="font-semibold text-gray-900">{item.title}</p><p className="text-sm text-gray-500">{item.is_auction ? 'Auction' : 'Fixed price'} · {new Date(item.created_at).toLocaleDateString('en-PK')}</p></div>
+                            <div className="text-right"><p className="font-semibold">Rs. {Number(item.price).toLocaleString()}</p><span className="text-sm capitalize text-gray-600">{item.status}</span></div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {activeTab === 'auctions' && (
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Your auctions</h2>
+                    {auctions.length === 0 ? <p className="py-8 text-center text-gray-500">No auctions created yet.</p> : auctions.map((auction) => (
+                      <a key={auction.id} href={`/auction?id=${auction.id}`} className="block py-4 border-b border-gray-100 hover:bg-gray-50">
+                        <p className="font-semibold">{auction.product?.title || 'Auction listing'}</p>
+                        <p className="text-sm text-gray-600">Current bid Rs. {Number(auction.current_bid || auction.starting_price).toLocaleString()} · {auction.total_bids} bids · ends {new Date(auction.end_time).toLocaleString('en-PK')}</p>
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {activeTab === 'orders' && (
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Incoming orders</h2>
+                    {orders.length === 0 ? <p className="py-8 text-center text-gray-500">No orders yet.</p> : orders.map((order) => (
+                      <div key={order.id} className="py-4 border-b border-gray-100 flex justify-between gap-3">
+                        <div><p className="font-semibold">{order.product?.title || 'Product unavailable'}</p><p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString('en-PK')}</p></div>
+                        <div className="text-right"><p className="font-semibold">Rs. {Number(order.amount).toLocaleString()}</p><p className="text-sm capitalize text-gray-600">{order.order_status}</p></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {activeTab === 'overview' && (
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <a className="btn-secondary px-4 py-2" href="/orders">Manage orders</a>
+                    <a className="btn-secondary px-4 py-2" href="/messages">Open messages</a>
+                  </div>
+                )}
+              </>
             )}
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   )
 }
