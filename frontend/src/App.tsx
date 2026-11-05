@@ -1,5 +1,5 @@
 import './App.css'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import Header from './components/layout/Header'
 import Hero from './components/marketplace/Hero'
@@ -7,18 +7,22 @@ import Categories from './components/marketplace/Categories'
 import FeaturedProducts from './components/marketplace/FeaturedProducts'
 import AuctionSection from './components/marketplace/AuctionSection'
 import Footer from './components/layout/Footer'
-import AuthPage from './pages/Auth/AuthPage'
-import SellerDashboard from './pages/SellerDashboard/SellerDashboard'
-import CreateListing from './pages/CreateListing/CreateListing'
-import AdminPanel from './pages/AdminPanel/AdminPanel'
-import ProductDetail from './pages/ProductDetail/ProductDetail'
-import SearchPage from './pages/SearchPage/SearchPage'
-import SellerProfile from './pages/SellerProfile/SellerProfile'
-import Messaging from './pages/Messaging/Messaging'
-import AuctionDetail from './pages/AuctionDetail/AuctionDetail'
-import Orders from './pages/Orders/Orders'
-import Checkout from './pages/Checkout/Checkout'
-import Favorites from './pages/Favorites/Favorites'
+const AuthPage = lazy(() => import('./pages/Auth/AuthPage'))
+const SellerDashboard = lazy(() => import('./pages/SellerDashboard/SellerDashboard'))
+const CreateListing = lazy(() => import('./pages/CreateListing/CreateListing'))
+const AdminPanel = lazy(() => import('./pages/AdminPanel/AdminPanel'))
+const ProductDetail = lazy(() => import('./pages/ProductDetail/ProductDetail'))
+const SearchPage = lazy(() => import('./pages/SearchPage/SearchPage'))
+const SellerProfile = lazy(() => import('./pages/SellerProfile/SellerProfile'))
+const Messaging = lazy(() => import('./pages/Messaging/Messaging'))
+const AuctionDetail = lazy(() => import('./pages/AuctionDetail/AuctionDetail'))
+const Orders = lazy(() => import('./pages/Orders/Orders'))
+const Checkout = lazy(() => import('./pages/Checkout/Checkout'))
+const Favorites = lazy(() => import('./pages/Favorites/Favorites'))
+
+function PageLoading() {
+  return <div className="min-h-[50vh] flex items-center justify-center text-gray-600">Loading Bidora…</div>
+}
 
 function HomePage() {
   return (
@@ -90,109 +94,109 @@ function AppContent() {
   }
 
   if (currentPage === 'auth') {
-    return <AuthPage />
+    return <Suspense fallback={<PageLoading />}><AuthPage /></Suspense>
   }
 
   if (currentPage === 'dashboard') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <SellerDashboard />
         <Footer />
-      </>
+      </Suspense>
     )
   }
 
   if (currentPage === 'create-listing') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <CreateListing />
         <Footer />
-      </>
+      </Suspense>
     )
   }
 
   if (currentPage === 'admin') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <AdminPanel />
         <Footer />
-      </>
+      </Suspense>
     )
   }
 
   if (currentPage === 'product') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <ProductDetail productId={pageParams.id || ''} />
         <Footer />
-      </>
+      </Suspense>
     )
   }
 
   if (currentPage === 'search') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <SearchPage />
         <Footer />
-      </>
+      </Suspense>
     )
   }
 
   if (currentPage === 'seller') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <SellerProfile sellerId={pageParams.id || ''} />
         <Footer />
-      </>
+      </Suspense>
     )
   }
 
   if (currentPage === 'messages') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <Messaging />
-      </>
+      </Suspense>
     )
   }
 
   if (currentPage === 'auction') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <AuctionDetail auctionId={pageParams.id || ''} />
         <Footer />
-      </>
+      </Suspense>
     )
   }
 
   if (currentPage === 'orders') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <Orders />
         <Footer />
-      </>
+      </Suspense>
     )
   }
 
   if (currentPage === 'favorites') {
-    return <><Header /><Favorites /><Footer /></>
+    return <Suspense fallback={<PageLoading />}><Header /><Favorites /><Footer /></Suspense>
   }
 
   if (currentPage === 'checkout') {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Header />
         <Checkout productId={pageParams.id} auctionId={pageParams.auctionId} />
         <Footer />
-      </>
+      </Suspense>
     )
   }
 
