@@ -10,7 +10,7 @@ interface Auction {
   title: string
   current_bid: number
   starting_price: number
-  reserve_price: number
+  minimum_increment: number
   end_time: string
   seller_id: string
   seller_name: string
@@ -52,13 +52,11 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
     try {
       const { data, error: auctionError } = await supabase
         .from('auctions')
-        .select('*')
+        .select('*, product:products!auctions_product_id_fkey(title), seller:users!auctions_seller_id_fkey(full_name)')
         .eq('id', auctionId)
         .single()
 
       if (auctionError) throw auctionError
-      setAuction(data)
-
       const { data: bids, error: bidsError } = await supabase
         .from('bids')
         .select(`
@@ -66,18 +64,26 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
           bidder_id,
           amount,
           created_at,
-          profiles!bidder_id(full_name)
+          bidder:users!bids_bidder_id_fkey(full_name)
         `)
         .eq('auction_id', auctionId)
-        .order('created_at', { ascending: false })
+        .order('amount', { ascending: false })
         .limit(20)
 
       if (bidsError) throw bidsError
       const mappedBids = (bids || []).map(bid => ({
         ...bid,
-        bidder_name: (bid.profiles as any)?.full_name || 'Anonymous'
+        bidder_name: (bid.bidder as any)?.full_name || 'Anonymous'
       }))
       setBidHistory(mappedBids)
+      setAuction({
+        ...data,
+        title: (data.product as any)?.title || 'Auction listing',
+        seller_name: (data.seller as any)?.full_name || 'Seller',
+        bid_count: Number(data.total_bids || 0),
+        highest_bidder_id: mappedBids[0]?.bidder_id || null,
+        highest_bidder_name: mappedBids[0]?.bidder_name || null,
+      })
     } catch (err) {
       console.error('Error fetching auction:', err)
       setError('Failed to load auction')
@@ -119,37 +125,25 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
     }
 
     const bid = parseFloat(bidAmount)
-    const minBid = auction.current_bid + 1000
+    const minBid = Math.max(auction.starting_price, auction.current_bid + auction.minimum_increment)
 
     if (bid < minBid) {
       setError(`Minimum bid is Rs. ${minBid.toLocaleString()}`)
       return
     }
 
-    if (bid.toString() === auction.highest_bidder_id) {
+    if (auction.highest_bidder_id === user.id) {
       setError('You are already the highest bidder')
       return
     }
 
     try {
-      const { error: bidError } = await supabase.from('bids').insert({
-        auction_id: auctionId,
-        bidder_id: user.id,
-        amount: bid,
+      const { error: bidError } = await supabase.rpc('place_auction_bid', {
+        p_auction_id: auctionId,
+        p_amount: bid,
       })
 
       if (bidError) throw bidError
-
-      const { error: updateError } = await supabase
-        .from('auctions')
-        .update({
-          current_bid: bid,
-          highest_bidder_id: user.id,
-          bid_count: (auction.bid_count || 0) + 1,
-        })
-        .eq('id', auctionId)
-
-      if (updateError) throw updateError
 
       setBidAmount('')
       setError('')
@@ -298,9 +292,9 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
                   whileHover={{ y: -4 }}
                   className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-100"
                 >
-                  <p className="text-sm text-gray-600 mb-2">Reserve Price</p>
+                  <p className="text-sm text-gray-600 mb-2">Minimum Increment</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    Rs. {auction.reserve_price.toLocaleString()}
+                    Rs. {auction.minimum_increment.toLocaleString()}
                   </p>
                 </motion.div>
                 <motion.div
@@ -366,7 +360,7 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
                           setBidAmount(e.target.value)
                           setError('')
                         }}
-                        placeholder={`Min: ${(auction.current_bid + 1000).toLocaleString()}`}
+                        placeholder={`Min: ${Math.max(auction.starting_price, auction.current_bid + auction.minimum_increment).toLocaleString()}`}
                         className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
                       />
                     </div>

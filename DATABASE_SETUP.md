@@ -25,6 +25,8 @@ If you already ran the simplified schema, back up your project and apply a revie
 
 This secures your database with Row-Level Security policies.
 
+To enable listing moderation, follow `ADMIN_SETUP.md` to grant the first administrator. Admin access is not granted automatically.
+
 ## Step 3: Verify the Setup
 
 After both scripts run successfully:

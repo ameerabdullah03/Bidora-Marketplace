@@ -34,17 +34,23 @@ export default function Orders() {
     try {
       let query = supabase
         .from('orders')
-        .select('*')
+        .select('*, product:products!orders_product_id_fkey(title), seller:users!orders_seller_id_fkey(full_name)')
         .or(`buyer_id.eq.${user?.id},seller_id.eq.${user?.id}`)
 
       if (filter !== 'all') {
-        query = query.eq('status', filter)
+        query = query.eq('order_status', filter)
       }
 
       const { data, error } = await query.order('created_at', { ascending: false })
 
       if (error) throw error
-      setOrders(data || [])
+      setOrders((data || []).map((order: any) => ({
+        ...order,
+        price: Number(order.amount),
+        status: order.order_status,
+        product_title: order.product?.title || 'Product unavailable',
+        seller_name: order.seller?.full_name || 'Seller',
+      })))
     } catch (err) {
       console.error('Error fetching orders:', err)
     } finally {

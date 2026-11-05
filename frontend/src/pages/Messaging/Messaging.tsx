@@ -32,6 +32,9 @@ export default function Messaging() {
   useEffect(() => {
     if (user?.id) {
       fetchConversations()
+      openConversationFromLink()
+    } else {
+      setLoading(false)
     }
   }, [user?.id])
 
@@ -49,25 +52,63 @@ export default function Messaging() {
         .from('conversations')
         .select(`
           id,
-          participant_id,
+          buyer_id,
+          seller_id,
           last_message,
-          updated_at,
-          unread_count,
-          profiles!participant_id(full_name)
+          last_message_at,
+          buyer:users!conversations_buyer_id_fkey(full_name),
+          seller:users!conversations_seller_id_fkey(full_name)
         `)
-        .eq('user_id', user?.id)
-        .order('updated_at', { ascending: false })
+        .or(`buyer_id.eq.${user?.id},seller_id.eq.${user?.id}`)
+        .order('last_message_at', { ascending: false, nullsFirst: false })
 
       if (error) throw error
       const mappedConversations = (data || []).map(conv => ({
         ...conv,
-        participant_name: (conv.profiles as any)?.full_name || 'Unknown'
+        participant_id: conv.buyer_id === user?.id ? conv.seller_id : conv.buyer_id,
+        participant_name: ((conv.buyer_id === user?.id ? conv.seller : conv.buyer) as any)?.full_name || 'Unknown',
+        updated_at: conv.last_message_at || '',
+        unread_count: 0,
       }))
       setConversations(mappedConversations)
     } catch (err) {
       console.error('Error fetching conversations:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const openConversationFromLink = async () => {
+    const params = new URLSearchParams(window.location.search)
+    const sellerId = params.get('seller')
+    const productId = params.get('product')
+    if (!sellerId || !user?.id || sellerId === user.id) return
+
+    try {
+      let query = supabase
+        .from('conversations')
+        .select('id')
+        .eq('buyer_id', user.id)
+        .eq('seller_id', sellerId)
+      if (productId) query = query.eq('product_id', productId)
+      const { data: existing, error: lookupError } = await query.maybeSingle()
+      if (lookupError) throw lookupError
+
+      if (existing) {
+        setSelectedConversation(existing.id)
+        return
+      }
+
+      const { data: created, error: createError } = await supabase
+        .from('conversations')
+        .insert({ buyer_id: user.id, seller_id: sellerId, product_id: productId })
+        .select('id')
+        .single()
+      if (createError) throw createError
+      setSelectedConversation(created.id)
+      await fetchConversations()
+    } catch (err) {
+      console.error('Error opening conversation:', err)
     }
   }
 
@@ -83,7 +124,7 @@ export default function Messaging() {
           content,
           created_at,
           is_read,
-          profiles!sender_id(full_name)
+          sender:users!messages_sender_id_fkey(full_name)
         `)
         .eq('conversation_id', selectedConversation)
         .order('created_at', { ascending: true })
@@ -91,7 +132,7 @@ export default function Messaging() {
       if (error) throw error
       const mappedMessages = (data || []).map(msg => ({
         ...msg,
-        sender_name: (msg.profiles as any)?.full_name || 'Unknown'
+        sender_name: (msg.sender as any)?.full_name || 'Unknown'
       }))
       setMessages(mappedMessages)
 
@@ -125,6 +166,7 @@ export default function Messaging() {
   }
 
   if (loading) return <div className="text-center py-12">Loading conversations...</div>
+  if (!user) return <div className="text-center py-12">Sign in to view and send messages.</div>
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

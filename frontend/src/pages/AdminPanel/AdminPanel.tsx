@@ -39,7 +39,7 @@ export default function AdminPanel() {
           created_at,
           status,
           category_id,
-          profiles!seller_id(full_name)
+          seller:users!products_seller_id_fkey(full_name)
         `)
 
       if (filter !== 'all') {
@@ -51,7 +51,7 @@ export default function AdminPanel() {
       if (error) throw error
       const mappedData = (data || []).map(item => ({
         ...item,
-        seller_name: (item.profiles as any)?.full_name || 'Unknown'
+        seller_name: (item.seller as any)?.full_name || 'Unknown'
       }))
       setListings(mappedData)
     } catch (err) {

@@ -33,13 +33,21 @@ export default function AuctionSection() {
     try {
       const { data, error } = await supabase
         .from('auctions')
-        .select('id, title, current_bid, starting_price, bid_count, end_time, condition')
+        .select('id, current_bid, starting_price, total_bids, end_time, product:products!auctions_product_id_fkey(title, condition)')
         .eq('status', 'active')
         .order('end_time', { ascending: true })
         .limit(4)
 
       if (error) throw error
-      setAuctions(data || [])
+      setAuctions((data || []).map((auction: any) => ({
+        id: auction.id,
+        title: auction.product?.title || 'Untitled auction',
+        condition: auction.product?.condition || 'Used',
+        current_bid: Number(auction.current_bid || auction.starting_price),
+        starting_price: Number(auction.starting_price),
+        bid_count: Number(auction.total_bids || 0),
+        end_time: auction.end_time,
+      })))
     } catch (err) {
       console.error('Error fetching auctions:', err)
     } finally {

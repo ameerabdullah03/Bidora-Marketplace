@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(20),
   avatar_url TEXT,
   bio TEXT,
-  account_type VARCHAR(20) DEFAULT 'buyer', -- 'buyer' or 'seller'
+  account_type VARCHAR(20) NOT NULL DEFAULT 'buyer' CHECK (account_type IN ('buyer', 'seller')),
   is_verified BOOLEAN DEFAULT false,
   verification_date TIMESTAMP,
   rating DECIMAL(3, 2) DEFAULT 0.0,
@@ -21,6 +21,38 @@ CREATE TABLE IF NOT EXISTS users (
   seller_since TIMESTAMP,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create the marketplace profile from Supabase Auth metadata on signup.
+CREATE OR REPLACE FUNCTION handle_new_auth_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.users (id, email, full_name, account_type)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    CASE WHEN NEW.raw_user_meta_data->>'account_type' = 'seller' THEN 'seller' ELSE 'buyer' END
+  )
+  ON CONFLICT (id) DO UPDATE
+    SET email = EXCLUDED.email,
+        full_name = COALESCE(NULLIF(EXCLUDED.full_name, ''), public.users.full_name);
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION handle_new_auth_user();
+
+-- Admin access is granted manually by a project owner; clients cannot self-promote.
+CREATE TABLE IF NOT EXISTS admins (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================
@@ -108,7 +140,7 @@ CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   buyer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   seller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  product_id UUID NOT NULL REFERENCES products(id) ON DELETE SET NULL,
+  product_id UUID REFERENCES products(id) ON DELETE SET NULL,
   auction_id UUID REFERENCES auctions(id) ON DELETE SET NULL,
   amount DECIMAL(12, 2) NOT NULL,
   payment_method VARCHAR(50), -- 'cod', 'jazz_cash', 'easy_paisa', 'bank_transfer'
@@ -205,6 +237,123 @@ CREATE INDEX idx_reports_status ON reports(status);
 CREATE INDEX idx_conversations_buyers ON conversations(buyer_id);
 CREATE INDEX idx_conversations_seller ON conversations(seller_id);
 CREATE INDEX idx_messages_conversation ON messages(conversation_id);
+
+-- Place a bid and update the auction atomically. Clients must call this function
+-- instead of writing to bids/auctions separately.
+CREATE OR REPLACE FUNCTION place_auction_bid(p_auction_id UUID, p_amount NUMERIC)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_auction auctions%ROWTYPE;
+  v_minimum NUMERIC;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+
+  SELECT * INTO v_auction
+  FROM auctions
+  WHERE id = p_auction_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Auction not found';
+  END IF;
+  IF v_auction.seller_id = auth.uid() THEN
+    RAISE EXCEPTION 'Sellers cannot bid on their own auction';
+  END IF;
+  IF v_auction.status <> 'active' OR v_auction.end_time <= NOW() THEN
+    RAISE EXCEPTION 'Auction is no longer active';
+  END IF;
+
+  v_minimum := GREATEST(v_auction.starting_price, v_auction.current_bid + v_auction.minimum_increment);
+  IF p_amount < v_minimum THEN
+    RAISE EXCEPTION 'Minimum bid is %', v_minimum;
+  END IF;
+
+  INSERT INTO bids (auction_id, bidder_id, amount)
+  VALUES (p_auction_id, auth.uid(), p_amount);
+
+  UPDATE auctions
+  SET current_bid = p_amount,
+      winner_id = auth.uid(),
+      total_bids = total_bids + 1,
+      updated_at = NOW()
+  WHERE id = p_auction_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION place_auction_bid(UUID, NUMERIC) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION place_auction_bid(UUID, NUMERIC) TO authenticated;
+
+-- Place a fixed-price order using the current database price and reserve stock.
+CREATE OR REPLACE FUNCTION place_product_order(p_product_id UUID, p_delivery_address TEXT)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_product products%ROWTYPE;
+  v_order_id UUID;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+  IF length(trim(coalesce(p_delivery_address, ''))) < 10 THEN
+    RAISE EXCEPTION 'Enter a complete delivery address';
+  END IF;
+
+  SELECT * INTO v_product FROM products
+  WHERE id = p_product_id FOR UPDATE;
+
+  IF NOT FOUND OR v_product.status <> 'approved' OR v_product.is_auction THEN
+    RAISE EXCEPTION 'Product is unavailable for purchase';
+  END IF;
+  IF v_product.seller_id = auth.uid() THEN
+    RAISE EXCEPTION 'You cannot order your own product';
+  END IF;
+  IF v_product.stock_quantity < 1 THEN
+    RAISE EXCEPTION 'Product is out of stock';
+  END IF;
+
+  INSERT INTO orders (buyer_id, seller_id, product_id, amount, payment_method, order_status, delivery_address)
+  VALUES (auth.uid(), v_product.seller_id, v_product.id, v_product.price, 'cod', 'pending', trim(p_delivery_address))
+  RETURNING id INTO v_order_id;
+
+  UPDATE products SET stock_quantity = stock_quantity - 1, updated_at = NOW()
+  WHERE id = v_product.id;
+
+  RETURN v_order_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION place_product_order(UUID, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION place_product_order(UUID, TEXT) TO authenticated;
+
+-- Keep the conversation preview current after a message is sent.
+CREATE OR REPLACE FUNCTION update_conversation_preview()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE conversations
+  SET last_message = NEW.content,
+      last_message_at = NEW.created_at,
+      updated_at = NEW.created_at
+  WHERE id = NEW.conversation_id;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER messages_update_conversation_preview
+AFTER INSERT ON messages
+FOR EACH ROW EXECUTE FUNCTION update_conversation_preview();
 
 -- ============================================
 -- INITIAL CATEGORIES DATA

@@ -5,6 +5,7 @@
 -- ENABLE RLS ON ALL TABLES
 -- ============================================
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
@@ -35,6 +36,10 @@ CREATE POLICY "users_insert_authenticated"
   ON users FOR INSERT
   WITH CHECK (auth.uid() = id);
 
+CREATE POLICY "admins_view_self"
+  ON admins FOR SELECT
+  USING (user_id = auth.uid());
+
 -- ============================================
 -- CATEGORIES TABLE POLICIES
 -- ============================================
@@ -56,6 +61,10 @@ CREATE POLICY "products_view_own"
   ON products FOR SELECT
   USING (seller_id = auth.uid());
 
+CREATE POLICY "products_view_admin"
+  ON products FOR SELECT
+  USING (EXISTS (SELECT 1 FROM admins WHERE admins.user_id = auth.uid()));
+
 -- Sellers can create products
 CREATE POLICY "products_insert_seller"
   ON products FOR INSERT
@@ -73,6 +82,15 @@ CREATE POLICY "products_update_own"
   ON products FOR UPDATE
   USING (seller_id = auth.uid())
   WITH CHECK (seller_id = auth.uid());
+
+CREATE POLICY "products_update_admin"
+  ON products FOR UPDATE
+  USING (EXISTS (SELECT 1 FROM admins WHERE admins.user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM admins WHERE admins.user_id = auth.uid()));
+
+CREATE POLICY "products_delete_admin"
+  ON products FOR DELETE
+  USING (EXISTS (SELECT 1 FROM admins WHERE admins.user_id = auth.uid()));
 
 -- ============================================
 -- PRODUCT IMAGES TABLE POLICIES
@@ -127,9 +145,9 @@ CREATE POLICY "bids_view_active"
   );
 
 -- Authenticated users can place bids
-CREATE POLICY "bids_insert_authenticated"
-  ON bids FOR INSERT
-  WITH CHECK (auth.uid() = bidder_id);
+-- Bid rows are written only through place_auction_bid(), which locks and
+-- validates the auction before updating its current winner and bid count.
+DROP POLICY IF EXISTS "bids_insert_authenticated" ON bids;
 
 -- ============================================
 -- ORDERS TABLE POLICIES
@@ -206,4 +224,28 @@ CREATE POLICY "messages_view_own"
 -- Authenticated users can send messages
 CREATE POLICY "messages_insert_authenticated"
   ON messages FOR INSERT
-  WITH CHECK (auth.uid() = sender_id);
+  WITH CHECK (
+    auth.uid() = sender_id
+    AND EXISTS (
+      SELECT 1 FROM conversations
+      WHERE conversations.id = messages.conversation_id
+        AND (conversations.buyer_id = auth.uid() OR conversations.seller_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "messages_update_read_status"
+  ON messages FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM conversations
+      WHERE conversations.id = messages.conversation_id
+        AND (conversations.buyer_id = auth.uid() OR conversations.seller_id = auth.uid())
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM conversations
+      WHERE conversations.id = messages.conversation_id
+        AND (conversations.buyer_id = auth.uid() OR conversations.seller_id = auth.uid())
+    )
+  );

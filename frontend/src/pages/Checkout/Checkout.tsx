@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CreditCard, Smartphone, Truck, Check, ChevronRight, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
@@ -13,8 +13,10 @@ interface CheckoutData {
   quantity: number
 }
 
-export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData }) {
+export default function Checkout({ checkoutData: initialCheckoutData, productId }: { checkoutData?: CheckoutData; productId?: string }) {
   const { user } = useAuth()
+  const [loadedCheckoutData, setLoadedCheckoutData] = useState<CheckoutData | undefined>()
+  const [productLoading, setProductLoading] = useState(false)
   const [step, setStep] = useState(1)
   const [paymentMethod, setPaymentMethod] = useState('cod')
   const [deliveryAddress, setDeliveryAddress] = useState('')
@@ -23,10 +25,53 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
   const [orderId, setOrderId] = useState('')
   const [error, setError] = useState('')
 
+  const checkoutData = initialCheckoutData || loadedCheckoutData
+
+  useEffect(() => {
+    if (!productId || initialCheckoutData) return
+    let cancelled = false
+    setProductLoading(true)
+    void (async () => {
+      try {
+        const { data, error: productError } = await supabase
+          .from('products')
+          .select('id, title, price, seller_id, seller:users!products_seller_id_fkey(full_name)')
+          .eq('id', productId)
+          .eq('status', 'approved')
+          .eq('is_auction', false)
+          .single()
+        if (cancelled) return
+        if (productError || !data) {
+          setError('This product is unavailable for purchase.')
+          return
+        }
+        setLoadedCheckoutData({
+          productId: data.id,
+          productTitle: data.title,
+          price: Number(data.price),
+          sellerId: data.seller_id,
+          sellerName: (data.seller as any)?.full_name || 'Seller',
+          quantity: 1,
+        })
+      } finally {
+        if (!cancelled) setProductLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [productId, initialCheckoutData])
+
   const totalPrice = checkoutData?.price || 0
 
   const handlePlaceOrder = async () => {
     setError('')
+    if (!user) {
+      setError('Sign in before placing an order.')
+      return
+    }
+    if (!checkoutData?.productId || !checkoutData.sellerId || !checkoutData.price) {
+      setError('Choose a product from its listing before checking out.')
+      return
+    }
     if (!deliveryAddress.trim()) {
       setError('Please enter a delivery address')
       return
@@ -34,24 +79,15 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
 
     setLoading(true)
     try {
-      const { data, error: insertError } = await supabase
-        .from('orders')
-        .insert({
-          product_id: checkoutData?.productId,
-          buyer_id: user?.id,
-          seller_id: checkoutData?.sellerId,
-          price: checkoutData?.price,
-          quantity: checkoutData?.quantity || 1,
-          status: 'pending',
-          payment_method: paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod,
-          payment_status: 'pending',
-          delivery_address: deliveryAddress,
-        })
-        .select()
+      if (paymentMethod !== 'cod') throw new Error('This payment method is not available yet.')
+      const { data, error: insertError } = await supabase.rpc('place_product_order', {
+        p_product_id: checkoutData.productId,
+        p_delivery_address: deliveryAddress,
+      })
 
       if (insertError) throw insertError
 
-      setOrderId(data[0].id)
+      setOrderId(data)
       setOrderCreated(true)
     } catch (err) {
       console.error('Error creating order:', err)
@@ -59,6 +95,10 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
     } finally {
       setLoading(false)
     }
+  }
+
+  if (productLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-gray-600">Loading product…</div>
   }
 
   // Animation variants
@@ -333,6 +373,7 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
                           type="radio"
                           name="payment"
                           value="jazzcash"
+                          disabled
                           checked={paymentMethod === 'jazzcash'}
                           onChange={(e) => {
                             setPaymentMethod(e.target.value)
@@ -346,7 +387,7 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
                           <Smartphone size={20} className="text-purple-600" />
                           <p className="font-bold text-gray-900">JazzCash</p>
                         </div>
-                        <p className="text-sm text-gray-600">Secure mobile payment</p>
+                        <p className="text-sm text-gray-600">Coming soon</p>
                       </div>
                     </div>
                   </motion.label>
@@ -354,7 +395,7 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
                   {/* EasyPaisa */}
                   <motion.label
                     whileHover={{ scale: 1.01 }}
-                    className={`p-5 border-2 rounded-xl cursor-pointer transition-all ${
+                    className={`p-5 border-2 rounded-xl cursor-not-allowed opacity-60 transition-all ${
                       paymentMethod === 'easypaisa'
                         ? 'border-orange-500 bg-gradient-to-r from-orange-50 to-red-50'
                         : 'border-gray-200 hover:border-orange-200 bg-white'
@@ -366,6 +407,7 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
                           type="radio"
                           name="payment"
                           value="easypaisa"
+                          disabled
                           checked={paymentMethod === 'easypaisa'}
                           onChange={(e) => {
                             setPaymentMethod(e.target.value)
@@ -379,7 +421,7 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
                           <Smartphone size={20} className="text-orange-600" />
                           <p className="font-bold text-gray-900">EasyPaisa</p>
                         </div>
-                        <p className="text-sm text-gray-600">Quick and easy mobile payment</p>
+                        <p className="text-sm text-gray-600">Coming soon</p>
                       </div>
                     </div>
                   </motion.label>
@@ -387,7 +429,7 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
                   {/* Credit Card */}
                   <motion.label
                     whileHover={{ scale: 1.01 }}
-                    className={`p-5 border-2 rounded-xl cursor-pointer transition-all ${
+                    className={`p-5 border-2 rounded-xl cursor-not-allowed opacity-60 transition-all ${
                       paymentMethod === 'card'
                         ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-cyan-50'
                         : 'border-gray-200 hover:border-blue-200 bg-white'
@@ -399,6 +441,7 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
                           type="radio"
                           name="payment"
                           value="card"
+                          disabled
                           checked={paymentMethod === 'card'}
                           onChange={(e) => {
                             setPaymentMethod(e.target.value)
@@ -412,7 +455,7 @@ export default function Checkout({ checkoutData }: { checkoutData?: CheckoutData
                           <CreditCard size={20} className="text-blue-600" />
                           <p className="font-bold text-gray-900">Credit/Debit Card</p>
                         </div>
-                        <p className="text-sm text-gray-600">Visa, Mastercard, or other card</p>
+                        <p className="text-sm text-gray-600">Coming soon</p>
                       </div>
                     </div>
                   </motion.label>

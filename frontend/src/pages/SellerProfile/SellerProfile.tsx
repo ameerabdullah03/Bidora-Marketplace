@@ -8,7 +8,7 @@ interface SellerInfo {
   full_name: string
   email: string
   account_type: string
-  avg_rating: number
+  rating: number
   total_reviews: number
   created_at: string
 }
@@ -37,8 +37,8 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
     setLoading(true)
     try {
       const { data: sellerData, error: sellerError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, account_type, avg_rating, total_reviews, created_at')
+        .from('users')
+        .select('id, full_name, email, account_type, rating, total_reviews, created_at')
         .eq('id', sellerId)
         .single()
 
@@ -158,13 +158,13 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
                     >
                       <Star
                         size={18}
-                        className={i < Math.round(seller.avg_rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                        className={i < Math.round(seller.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
                       />
                     </motion.div>
                   ))}
                 </div>
                 <span className="font-bold text-gray-900">
-                  {seller.avg_rating?.toFixed(1)} ({seller.total_reviews} reviews)
+                  {seller.rating?.toFixed(1)} ({seller.total_reviews} reviews)
                 </span>
               </motion.div>
 
@@ -226,7 +226,7 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
             >
               <p className="text-sm text-gray-600 mb-2 font-semibold">Positive Feedback</p>
               <p className="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                {Math.round(seller.avg_rating * 20)}%
+                {Math.round(seller.rating * 20)}%
               </p>
             </motion.div>
           </motion.div>

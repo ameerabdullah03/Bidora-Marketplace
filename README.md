@@ -144,6 +144,7 @@ The canonical database schema is `database/schema.sql`. To set it up:
 - `messages` (in-app chat)
 
 After creating the schema, apply `database/rls-policies.sql`. Do not use the legacy `schema-simplified.sql` for a new installation.
+To use the moderation panel, follow `ADMIN_SETUP.md` to grant an administrator account.
 
 ## 🔑 Key Features Explained
 

@@ -49,7 +49,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
           created_at,
           category_id,
           images:product_images(image_url),
-          profiles!seller_id(full_name, avg_rating, total_reviews)
+          seller:users!products_seller_id_fkey(full_name, rating, total_reviews)
         `)
         .eq('id', productId)
         .single()
@@ -57,9 +57,9 @@ export default function ProductDetail({ productId }: { productId: string }) {
       if (error) throw error
       const product = {
         ...data,
-        seller_name: (data.profiles as any)?.full_name || 'Unknown',
-        seller_rating: (data.profiles as any)?.avg_rating || 0,
-        seller_reviews: (data.profiles as any)?.total_reviews || 0
+        seller_name: (data.seller as any)?.full_name || 'Unknown',
+        seller_rating: (data.seller as any)?.rating || 0,
+        seller_reviews: (data.seller as any)?.total_reviews || 0
       }
       setProduct(product)
     } catch (err) {
@@ -322,7 +322,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => window.location.href = `/messages?seller=${product.seller_id}`}
+                onClick={() => window.location.href = `/messages?seller=${product.seller_id}&product=${product.id}`}
                 className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-bold rounded-xl hover:shadow-lg transition-all"
               >
                 <MessageCircle size={20} />
@@ -332,9 +332,10 @@ export default function ProductDetail({ productId }: { productId: string }) {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => window.location.href = `/checkout?id=${product.id}`}
                 className="w-full px-6 py-4 bg-gray-100 text-gray-900 font-bold rounded-xl hover:bg-gray-200 transition-all border border-gray-200"
               >
-                Add to Cart
+                Buy Now
               </motion.button>
             </div>
           </motion.div>
