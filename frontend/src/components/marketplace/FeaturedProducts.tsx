@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Heart, Star, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
+import { useAuth } from '../../hooks/useAuth'
 
 interface Product {
   id: string
@@ -14,12 +15,47 @@ interface Product {
 }
 
 export default function FeaturedProducts() {
+  const { user } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchFeaturedProducts()
   }, [])
+
+  useEffect(() => {
+    if (!user) {
+      setFavoriteIds(new Set())
+      return
+    }
+    supabase.from('favorites').select('product_id').eq('user_id', user.id).then(({ data, error }) => {
+      if (error) console.error('Error loading saved listings:', error)
+      else setFavoriteIds(new Set((data || []).map((item) => item.product_id)))
+    })
+  }, [user?.id])
+
+  const toggleFavorite = async (event: React.MouseEvent, productId: string) => {
+    event.stopPropagation()
+    if (!user) {
+      window.location.href = '/auth'
+      return
+    }
+    const isSaved = favoriteIds.has(productId)
+    const result = isSaved
+      ? await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', productId)
+      : await supabase.from('favorites').insert({ user_id: user.id, product_id: productId })
+    if (result.error) {
+      console.error('Error updating saved listing:', result.error)
+      return
+    }
+    setFavoriteIds((current) => {
+      const next = new Set(current)
+      if (isSaved) next.delete(productId)
+      else next.add(productId)
+      return next
+    })
+  }
 
   const fetchFeaturedProducts = async () => {
     try {
@@ -136,9 +172,11 @@ export default function FeaturedProducts() {
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
+                        onClick={(event) => toggleFavorite(event, product.id)}
+                        aria-label={favoriteIds.has(product.id) ? 'Remove saved listing' : 'Save listing'}
                         className="absolute top-3 left-3 p-2 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <Heart size={18} className="text-gray-400 hover:text-red-500 transition-colors" />
+                        <Heart size={18} className={favoriteIds.has(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500 transition-colors'} />
                       </motion.button>
                     </div>
 
