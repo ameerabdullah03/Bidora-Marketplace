@@ -31,14 +31,19 @@ export default function Orders() {
   const [actionError, setActionError] = useState('')
 
   useEffect(() => {
-    fetchOrders()
+    if (!user) {
+      setLoading(false)
+      return
+    }
+    void fetchOrders()
   }, [user?.id, filter])
 
   const fetchOrders = async () => {
+    if (!user) return
     try {
       let query = supabase
         .from('orders')
-        .select('*, product:products!orders_product_id_fkey(title), seller:users!orders_seller_id_fkey(full_name)')
+        .select('*, product:products!orders_product_id_fkey(title), seller:public_profiles!orders_seller_id_fkey(full_name)')
         .or(`buyer_id.eq.${user?.id},seller_id.eq.${user?.id}`)
 
       if (filter !== 'all') {

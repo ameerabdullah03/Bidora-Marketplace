@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Star, Calendar, Mail, MessageCircle, AlertCircle, Shield } from 'lucide-react'
+import { Star, Calendar, MessageCircle, AlertCircle, Shield } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
 
 interface SellerInfo {
   id: string
   full_name: string
-  email: string
   account_type: string
   rating: number
   total_reviews: number
@@ -37,8 +36,8 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
     setLoading(true)
     try {
       const { data: sellerData, error: sellerError } = await supabase
-        .from('users')
-        .select('id, full_name, email, account_type, rating, total_reviews, created_at')
+        .from('public_profiles')
+        .select('id, full_name, account_type, rating, total_reviews, created_at')
         .eq('id', sellerId)
         .single()
 
@@ -173,10 +172,6 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
                 <div className="flex items-center gap-2">
                   <Calendar size={16} className="text-teal-600" />
                   <span>Member since {new Date(seller.created_at).toLocaleDateString('en-PK', { year: 'numeric', month: 'long' })}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail size={16} className="text-teal-600" />
-                  <span>{seller.email}</span>
                 </div>
               </div>
             </div>

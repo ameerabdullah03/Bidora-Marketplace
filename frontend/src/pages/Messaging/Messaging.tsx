@@ -56,8 +56,8 @@ export default function Messaging() {
           seller_id,
           last_message,
           last_message_at,
-          buyer:users!conversations_buyer_id_fkey(full_name),
-          seller:users!conversations_seller_id_fkey(full_name)
+          buyer:public_profiles!conversations_buyer_id_fkey(full_name),
+          seller:public_profiles!conversations_seller_id_fkey(full_name)
         `)
         .or(`buyer_id.eq.${user?.id},seller_id.eq.${user?.id}`)
         .order('last_message_at', { ascending: false, nullsFirst: false })
@@ -124,7 +124,7 @@ export default function Messaging() {
           content,
           created_at,
           is_read,
-          sender:users!messages_sender_id_fkey(full_name)
+          sender:public_profiles!messages_sender_id_fkey(full_name)
         `)
         .eq('conversation_id', selectedConversation)
         .order('created_at', { ascending: true })

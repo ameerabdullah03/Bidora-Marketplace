@@ -39,7 +39,10 @@ export default function SellerDashboard() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
     let cancelled = false
     const loadDashboard = async () => {
       setLoading(true)
@@ -84,6 +87,18 @@ export default function SellerDashboard() {
   ]
 
   const tabs = ['overview', 'listings', 'auctions', 'orders'] as const
+
+  if (!user || profile?.account_type !== 'seller') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-bold text-gray-900">Seller access required</h1>
+          <p className="mt-2 text-gray-600">Sign in with a seller account to manage your listings and orders.</p>
+          <a href="/auth" className="mt-5 inline-block rounded-lg bg-teal-600 px-5 py-3 font-semibold text-white">Sign in</a>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

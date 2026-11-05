@@ -15,6 +15,8 @@ This is the canonical schema for the application. Do not run `schema-simplified.
 
 If you already ran the simplified schema, back up your project and apply a reviewed migration before continuing. Do not rerun either schema over live data.
 
+If the canonical schema is already installed, run `database/migrations/2026-11-05-marketplace-core.sql` instead of rerunning the base schema or RLS file. This upgrade adds the profile trigger, favorites/admin tables, secure order/bid functions, rating/message triggers, and updated policies.
+
 ## Step 2: Execute the RLS Policies SQL
 
 1. In the same **SQL Editor**, click **New Query** again

@@ -64,9 +64,9 @@ CREATE POLICY "listing_images_delete_owned_product"
 -- USERS TABLE POLICIES
 -- ============================================
 -- Users can view all public user profiles
-CREATE POLICY "users_view_public"
+CREATE POLICY "users_view_self_or_admin"
   ON users FOR SELECT
-  USING (true);
+  USING (auth.uid() = id OR EXISTS (SELECT 1 FROM admins WHERE admins.user_id = auth.uid()));
 
 -- Users can update their own profile
 CREATE POLICY "users_update_self"

@@ -52,7 +52,7 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
     try {
       const { data, error: auctionError } = await supabase
         .from('auctions')
-        .select('*, product:products!auctions_product_id_fkey(title), seller:users!auctions_seller_id_fkey(full_name)')
+        .select('*, product:products!auctions_product_id_fkey(title), seller:public_profiles!auctions_seller_id_fkey(full_name)')
         .eq('id', auctionId)
         .single()
 
@@ -64,7 +64,7 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
           bidder_id,
           amount,
           created_at,
-          bidder:users!bids_bidder_id_fkey(full_name)
+          bidder:public_profiles!bids_bidder_id_fkey(full_name)
         `)
         .eq('auction_id', auctionId)
         .order('amount', { ascending: false })

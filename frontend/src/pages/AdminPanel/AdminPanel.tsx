@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Trash2, Eye, Search as SearchIcon, Filter } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabase'
+import { useAuth } from '../../hooks/useAuth'
 
 interface PendingListing {
   id: string
@@ -16,17 +17,35 @@ interface PendingListing {
 }
 
 export default function AdminPanel() {
+  const { user } = useAuth()
   const [listings, setListings] = useState<PendingListing[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending')
   const [searchQuery, setSearchQuery] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
-    fetchListings()
-  }, [filter])
+    if (!user) {
+      setLoading(false)
+      setErrorMessage('Sign in with an administrator account to moderate listings.')
+      return
+    }
+    const load = async () => {
+      const { data: admin, error } = await supabase.from('admins').select('user_id').eq('user_id', user.id).maybeSingle()
+      if (error || !admin) {
+        setLoading(false)
+        setErrorMessage('Administrator access is required to view this page.')
+        return
+      }
+      setErrorMessage('')
+      await fetchListings()
+    }
+    void load()
+  }, [filter, user?.id])
 
   const fetchListings = async () => {
     setLoading(true)
+    setErrorMessage('')
     try {
       let query = supabase
         .from('products')
@@ -39,7 +58,7 @@ export default function AdminPanel() {
           created_at,
           status,
           category_id,
-          seller:users!products_seller_id_fkey(full_name)
+          seller:public_profiles!products_seller_id_fkey(full_name)
         `)
 
       if (filter !== 'all') {
@@ -56,6 +75,7 @@ export default function AdminPanel() {
       setListings(mappedData)
     } catch (err) {
       console.error('Error fetching listings:', err)
+      setErrorMessage(err instanceof Error ? err.message : 'Could not load moderation queue.')
     } finally {
       setLoading(false)
     }
@@ -129,6 +149,7 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-12">
       <div className="max-w-7xl mx-auto px-4">
+        {errorMessage && <div role="alert" className="my-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{errorMessage}</div>}
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

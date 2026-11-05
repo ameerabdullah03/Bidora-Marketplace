@@ -42,7 +42,7 @@ export const getCurrentUser = async () => {
 export const getProducts = async (limit = 20) => {
   return await supabase
     .from('products')
-    .select('*, seller:users(id, full_name, rating)')
+    .select('*, seller:public_profiles(id, full_name, rating)')
     .eq('status', 'approved')
     .limit(limit)
     .order('created_at', { ascending: false })
@@ -51,7 +51,7 @@ export const getProducts = async (limit = 20) => {
 export const getProductById = async (id: string) => {
   return await supabase
     .from('products')
-    .select('*, seller:users(*), images:product_images(*)')
+    .select('*, seller:public_profiles(*), images:product_images(*)')
     .eq('id', id)
     .single()
 }
@@ -71,7 +71,7 @@ export const createProduct = async (productData: any) => {
 export const getAuctions = async (limit = 10) => {
   return await supabase
     .from('auctions')
-    .select('*, product:products(*, seller:users(full_name, rating))')
+    .select('*, product:products(*, seller:public_profiles(full_name, rating))')
     .eq('status', 'active')
     .limit(limit)
     .order('end_time', { ascending: true })

@@ -98,7 +98,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
   const fetchReviews = async () => {
     const { data, error } = await supabase
       .from('reviews')
-      .select('id, rating, content, created_at, reviewer:users!reviews_reviewer_id_fkey(full_name)')
+      .select('id, rating, content, created_at, reviewer:public_profiles!reviews_reviewer_id_fkey(full_name)')
       .eq('product_id', productId)
       .eq('is_seller_review', true)
       .order('created_at', { ascending: false })
@@ -171,7 +171,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
           created_at,
           category_id,
           images:product_images(image_url),
-          seller:users!products_seller_id_fkey(full_name, rating, total_reviews)
+          seller:public_profiles!products_seller_id_fkey(full_name, rating, total_reviews)
         `)
         .eq('id', productId)
         .single()

@@ -55,6 +55,12 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE OR REPLACE VIEW public_profiles AS
+SELECT id, full_name, avatar_url, bio, account_type, is_verified,
+       rating, total_reviews, total_sales, seller_since, created_at
+FROM users;
+GRANT SELECT ON public_profiles TO anon, authenticated;
+
 CREATE TABLE IF NOT EXISTS favorites (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
@@ -462,6 +468,7 @@ AS $$
 DECLARE
   v_order orders%ROWTYPE;
 BEGIN
+  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Authentication required'; END IF;
   SELECT * INTO v_order FROM orders WHERE id = p_order_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Order not found'; END IF;
 

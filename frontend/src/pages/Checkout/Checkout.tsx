@@ -39,7 +39,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
         if (auctionId) {
           const result = await supabase
             .from('auctions')
-            .select('id, current_bid, starting_price, end_time, winner_id, product:products!auctions_product_id_fkey(id, title, seller_id, status, seller:users!products_seller_id_fkey(full_name))')
+            .select('id, current_bid, starting_price, end_time, winner_id, product:products!auctions_product_id_fkey(id, title, seller_id, status, seller:public_profiles!products_seller_id_fkey(full_name))')
             .eq('id', auctionId)
             .single()
           data = result.data
@@ -47,7 +47,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
         } else {
           const result = await supabase
             .from('products')
-            .select('id, title, price, seller_id, seller:users!products_seller_id_fkey(full_name)')
+            .select('id, title, price, seller_id, seller:public_profiles!products_seller_id_fkey(full_name)')
             .eq('id', productId!)
             .eq('status', 'approved')
             .eq('is_auction', false)
