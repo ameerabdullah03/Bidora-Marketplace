@@ -9,10 +9,10 @@
 
 - The frontend implements authentication, fixed-price listings, auctions, favorites, buyer/seller orders, messaging, reviews, and admin moderation.
 - Checkout currently supports cash on delivery. JazzCash, EasyPaisa, and card payments are unavailable until merchant credentials and server-side callbacks are implemented.
-- The production database setup is not complete until the correct SQL path in `DATABASE_SETUP.md` is applied, the `listing-images` bucket is configured, and the first admin is provisioned.
-- A read-only Supabase API check on 2026-11-05 found `users`, `products`, `auctions`, and `orders` available, while `public_profiles`, `admins`, and `favorites` returned 404. The current marketplace migration still needs to be applied to the live project.
+- The canonical marketplace migration has been applied to the live Supabase project and required objects/policies were verified. A verified pre-migration backup exists. The public `listing-images` bucket is configured for JPEG/PNG/WebP, 10 MB maximum, with ownership policies verified. First admin provisioning and real-account acceptance checks remain.
+- An earlier read-only API check found several newer objects missing before migration. After the migration was applied, the dashboard confirmed `admins`, `favorites`, `user_action_counters`, `public_profiles`, and the required marketplace policies.
 - Build success alone does not verify live database behavior. Run the documented real-account acceptance checks after Supabase setup.
-- Hosting, email/SMS delivery, and payment-provider credentials are external launch tasks.
+- Auth is configured for local development, with email confirmation, secure email/password changes, and an 8-character password minimum. The production HTTPS domain and custom SMTP are not yet verified; the dashboard shows a 2-email/hour limit. Hosting configuration, deliverable production email, and payment-provider credentials remain launch tasks.
 
 The sections below are historical notes from an earlier implementation session. They describe work reported at that time and are not a current completion checklist; some component counts, build metrics, or feature labels may be stale.
 
