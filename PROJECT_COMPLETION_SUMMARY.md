@@ -166,6 +166,7 @@ Features:
 /messages → Messaging interface
 /auction?id=<uuid> → Auction bidding
 /orders → Order tracking
+/favorites → Saved listings
 /checkout → Payment checkout
 ```
 
@@ -407,15 +408,15 @@ D:\Bidora\
 - **Git version control** with 2 major commits
 - **Ready for deployment** to Cloudflare Pages + Supabase
 
-The application is a fully functional electronics marketplace with:
+The application has these implemented code flows, subject to applying the current Supabase migration and setup steps:
 - User authentication
 - Product listings & search
 - Admin moderation
 - Live auctions
 - Real-time messaging
 - Order management
-- Multi-method payments
+- Cash-on-delivery checkout; online gateways are not active
 
 **GitHub Repository**: https://github.com/ameerabdullah03/Bidora-Marketplace
 
-All code is production-grade, well-structured, and ready for real user testing and payment gateway integration.
+The frontend production build passes. Live Supabase migration, storage bucket and admin setup, real-account acceptance checks, online payment integration, notifications, and hosting configuration remain before production launch.
