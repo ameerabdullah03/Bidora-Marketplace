@@ -11,6 +11,7 @@ interface ProductFormData {
   condition: 'new' | 'like_new' | 'excellent' | 'good' | 'fair'
   location: string
   is_auction: boolean
+  auction_duration_days: number
   stock_quantity: number
 }
 
@@ -24,6 +25,7 @@ export default function CreateListing() {
     condition: 'new',
     location: 'Karachi',
     is_auction: false,
+    auction_duration_days: 3,
     stock_quantity: 1,
   })
 
@@ -138,6 +140,23 @@ export default function CreateListing() {
         if (imageRecordError) throw imageRecordError
       }
 
+      if (formData.is_auction) {
+        const startsAt = new Date()
+        const endsAt = new Date(startsAt.getTime() + formData.auction_duration_days * 24 * 60 * 60 * 1000)
+        const { error: auctionError } = await supabase.from('auctions').insert({
+          product_id: productId,
+          seller_id: user.id,
+          starting_price: formData.price,
+          current_bid: formData.price,
+          minimum_increment: 1000,
+          start_time: startsAt.toISOString(),
+          end_time: endsAt.toISOString(),
+          status: 'active',
+        })
+
+        if (auctionError) throw auctionError
+      }
+
       setSuccess('✅ Listing created successfully! Pending admin approval.')
       setFormData({
         title: '',
@@ -147,6 +166,7 @@ export default function CreateListing() {
         condition: 'new',
         location: 'Karachi',
         is_auction: false,
+        auction_duration_days: 3,
         stock_quantity: 1,
       })
       setImages([])
@@ -350,6 +370,24 @@ export default function CreateListing() {
                 List this as an auction instead of fixed price
               </span>
             </label>
+            {formData.is_auction && (
+              <div className="mt-4 max-w-xs">
+                <label className="block text-sm font-semibold text-dark-900 mb-2" htmlFor="auction-duration">
+                  Auction duration
+                </label>
+                <select
+                  id="auction-duration"
+                  value={formData.auction_duration_days}
+                  onChange={(e) => setFormData({ ...formData, auction_duration_days: Number(e.target.value) })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  {[1, 3, 5, 7].map((days) => (
+                    <option key={days} value={days}>{days} {days === 1 ? 'day' : 'days'}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-dark-500 mt-1">Bids must increase by at least Rs. 1,000.</p>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}
