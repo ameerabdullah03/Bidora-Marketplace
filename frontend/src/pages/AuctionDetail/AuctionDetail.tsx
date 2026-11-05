@@ -237,22 +237,20 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
                 animate={{ opacity: 1, scale: 1 }}
                 className={`p-6 rounded-2xl mb-8 border-2 ${
                   isAuctionEnded
-                    ? 'bg-gradient-to-br from-red-50 to-pink-50 border-red-200'
+                    ? 'bg-red-50 border-red-200'
                     : 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200'
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     {isAuctionEnded ? (
-                      <p className="text-sm font-bold text-red-700">❌ AUCTION ENDED</p>
+                      <p className="text-sm font-bold text-red-700">AUCTION ENDED</p>
                     ) : (
                       <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
                         className="flex items-center gap-2"
                       >
                         <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
-                        <p className="text-sm font-bold text-orange-700">🔴 LIVE AUCTION</p>
+                        <p className="text-sm font-bold text-orange-700">LIVE AUCTION</p>
                       </motion.div>
                     )}
                   </div>
@@ -297,10 +295,10 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
                 <motion.div
                   variants={itemVariants}
                   whileHover={{ y: -4 }}
-                  className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-100"
+                  className="bg-bidora-paper p-6 rounded-lg border border-bidora-ink/10"
                 >
                   <p className="text-sm text-gray-600 mb-2">Minimum Increment</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-bidora-ink">
                     Rs. {auction.minimum_increment.toLocaleString()}
                   </p>
                 </motion.div>
@@ -326,7 +324,7 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
                     <div>
                       <p className="text-sm font-bold text-yellow-700 mb-1">Highest Bidder</p>
                       <p className="text-xl font-bold text-gray-900">
-                        {isHighestBidder ? '🎉 You are the highest bidder!' : auction.highest_bidder_name}
+                        {isHighestBidder ? 'You are the highest bidder.' : auction.highest_bidder_name}
                       </p>
                     </div>
                   </div>
@@ -403,11 +401,11 @@ export default function AuctionDetail({ auctionId }: { auctionId: string }) {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 p-6 rounded-2xl text-center"
+                  className="bg-red-50 border border-red-200 p-6 rounded-lg text-center"
                 >
                   <p className="text-sm font-bold text-red-700 mb-2">This auction has ended</p>
                   {isHighestBidder && (
-                    <p className="text-sm font-semibold text-red-600">🎉 Congratulations! You won!</p>
+                    <p className="text-sm font-semibold text-red-600">You won this auction.</p>
                   )}
                 </motion.div>
               )}

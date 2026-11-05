@@ -173,7 +173,7 @@ export default function CreateListing() {
 
       createdProductId = null
 
-      setSuccess('✅ Listing created successfully! Pending admin approval.')
+      setSuccess('Listing created successfully. Pending admin approval. Pending admin approval.')
       setFormData({
         title: '',
         description: '',
@@ -247,7 +247,7 @@ export default function CreateListing() {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g., iPhone 15 Pro Max - 256GB - Black"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
               maxLength={255}
             />
             <p className="text-xs text-dark-500 mt-1">{formData.title.length}/255</p>
@@ -263,7 +263,7 @@ export default function CreateListing() {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Describe your product in detail. Include condition, features, and any defects..."
               rows={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
               maxLength={2000}
             />
             <p className="text-xs text-dark-500 mt-1">{formData.description.length}/2000</p>
@@ -278,7 +278,7 @@ export default function CreateListing() {
               <select
                 value={formData.category_id}
                 onChange={(e) => setFormData({ ...formData, category_id: parseInt(e.target.value) })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
               >
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
@@ -299,7 +299,7 @@ export default function CreateListing() {
                 placeholder="0"
                 min="0"
                 step="100"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
               />
             </div>
 
@@ -310,7 +310,7 @@ export default function CreateListing() {
               <select
                 value={formData.condition}
                 onChange={(e) => setFormData({ ...formData, condition: e.target.value as any })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
               >
                 {conditions.map((cond) => (
                   <option key={cond.value} value={cond.value}>
@@ -331,7 +331,7 @@ export default function CreateListing() {
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               placeholder="e.g., Karachi, Lahore"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
             />
           </div>
 
@@ -340,10 +340,10 @@ export default function CreateListing() {
             <label className="block text-sm font-semibold text-dark-900 mb-2">
               Product Images (Max 5) *
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary-500 transition-colors">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-bidora-ink transition-colors">
               <Upload size={32} className="mx-auto text-gray-400 mb-3" />
               <label className="cursor-pointer">
-                <span className="text-primary-600 font-medium hover:underline">
+                <span className="text-bidora-ink font-medium hover:underline">
                   Click to upload
                 </span>
                 <input
@@ -405,7 +405,7 @@ export default function CreateListing() {
                   id="auction-duration"
                   value={formData.auction_duration_days}
                   onChange={(e) => setFormData({ ...formData, auction_duration_days: Number(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
                 >
                   {[1, 3, 5, 7].map((days) => (
                     <option key={days} value={days}>{days} {days === 1 ? 'day' : 'days'}</option>

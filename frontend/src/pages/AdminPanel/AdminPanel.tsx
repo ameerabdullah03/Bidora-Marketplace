@@ -3,6 +3,7 @@ import { CheckCircle, XCircle, Trash2, Eye, Search as SearchIcon, Filter } from 
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import ConfirmationDialog from '../../components/shared/ConfirmationDialog'
 
 interface PendingListing {
   id: string
@@ -24,6 +25,7 @@ export default function AdminPanel() {
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending')
   const [searchQuery, setSearchQuery] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<PendingListing | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -135,7 +137,7 @@ export default function AdminPanel() {
   const stats = [
     { label: 'Pending', count: listings.filter(l => l.status === 'pending').length, color: 'from-yellow-500 to-orange-500' },
     { label: 'Approved', count: listings.filter(l => l.status === 'approved').length, color: 'from-green-500 to-emerald-500' },
-    { label: 'Rejected', count: listings.filter(l => l.status === 'rejected').length, color: 'from-red-500 to-pink-500' },
+    { label: 'Rejected', count: listings.filter(l => l.status === 'rejected').length, color: 'bg-red-600' },
   ]
 
   const containerVariants = {
@@ -332,7 +334,7 @@ export default function AdminPanel() {
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDelete(listing.id)}
+                            onClick={() => setDeleteTarget(listing)}
                             className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all"
                             title="Delete"
                           >
@@ -341,6 +343,8 @@ export default function AdminPanel() {
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
+                            onClick={() => { window.location.href = `/product?id=${encodeURIComponent(listing.id)}` }}
+                            aria-label="View listing"
                             className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all"
                             title="View"
                           >
@@ -356,6 +360,14 @@ export default function AdminPanel() {
           )}
         </motion.div>
       </div>
+      {deleteTarget && <ConfirmationDialog
+        title="Delete this listing?"
+        description={`Delete ${deleteTarget.title} from the marketplace? This action cannot be undone.`}
+        confirmText="Delete listing"
+        danger
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { await handleDelete(deleteTarget.id); setDeleteTarget(null) }}
+      />}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Star, MapPin, Shield, MessageCircle, Heart, Share2, Check, AlertCircle } from 'lucide-react'
+import { Star, MapPin, Shield, MessageCircle, Heart, Share2, Check, AlertCircle, Copy, Image as ImageIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
@@ -79,6 +79,17 @@ export default function ProductDetail({ productId }: { productId: string }) {
       return
     }
     setIsFavorite(!isFavorite)
+  }
+
+  const copyProductLink = async () => {
+    try {
+      const link = new URL(`/product?id=${encodeURIComponent(productId)}`, window.location.origin).toString()
+      await navigator.clipboard.writeText(link)
+      setShareMessage('Listing link copied')
+      window.setTimeout(() => setShareMessage(''), 2500)
+    } catch {
+      setShareMessage('Could not copy this link. Check browser permissions and try again.')
+    }
   }
 
   const shareProduct = async () => {
@@ -271,7 +282,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <span className="text-6xl">📷</span>
+                    <ImageIcon size={48} aria-hidden="true" />
                   </div>
                 )}
 
@@ -280,7 +291,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full font-bold text-sm"
+                  className="absolute top-4 left-4 bg-bidora-ink text-white px-3 py-2 rounded-sm font-bold text-sm"
                 >
                   {product.condition}
                 </motion.div>
@@ -330,7 +341,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
                     >
                       <img
                         src={img.image_url}
-                        alt={`${idx}`}
+                        alt={`${product.title}, image ${idx + 1}`}
                         className="w-full h-full object-cover hover:scale-110 transition-transform"
                       />
                     </motion.button>
@@ -347,13 +358,8 @@ export default function ProductDetail({ productId }: { productId: string }) {
               <h1 className="text-3xl font-bold text-gray-900 mb-3 line-clamp-3">
                 {product.title}
               </h1>
-              <motion.p
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent"
-              >
-                Rs. {product.price.toLocaleString()}
-              </motion.p>
+              <p className="text-3xl font-bold text-bidora-ink">Rs {product.price.toLocaleString()}</p>
+              <button type="button" onClick={copyProductLink} className="mt-5 inline-flex items-center gap-2 border border-bidora-ink/20 px-3 py-2 text-sm font-semibold hover:bg-bidora-paper"><Copy size={15} /> Copy listing link</button>
             </div>
 
             {/* Info Cards */}

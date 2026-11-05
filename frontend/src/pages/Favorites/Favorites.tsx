@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Heart, Trash2 } from 'lucide-react'
+import { Heart, Package, Trash2 } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -59,7 +59,7 @@ export default function Favorites() {
             {products.map((product) => (
               <article key={product.id} className="overflow-hidden rounded-2xl bg-white shadow-sm">
                 <button onClick={() => window.location.href = `/product?id=${product.id}`} className="block h-48 w-full bg-gray-100">
-                  {product.images?.[0]?.image_url ? <img src={product.images[0].image_url} alt={product.title} className="h-full w-full object-cover" loading="lazy" /> : <span className="grid h-full place-items-center text-4xl text-gray-400">📦</span>}
+                  {product.images?.[0]?.image_url ? <img src={product.images[0].image_url} alt={product.title} className="h-full w-full object-cover" loading="lazy" /> : <span className="grid h-full place-items-center text-gray-400"><Package size={28} aria-hidden="true" /></span>}
                 </button>
                 <div className="p-4"><h2 className="line-clamp-2 font-semibold text-gray-900">{product.title}</h2><div className="mt-3 flex items-center justify-between"><p className="font-bold text-teal-700">Rs. {Number(product.price).toLocaleString()}</p><span className="text-xs capitalize text-gray-500">{product.condition}</span></div><button onClick={() => removeFavorite(product.id)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 py-2 text-sm text-gray-700 hover:bg-gray-50"><Trash2 size={15} />Remove saved listing</button></div>
               </article>

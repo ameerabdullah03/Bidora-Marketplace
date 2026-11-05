@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CreditCard, Smartphone, Truck, Check, ChevronRight, AlertCircle } from 'lucide-react'
+import { CreditCard, Smartphone, Truck, Check, ChevronRight, AlertCircle, Package } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
@@ -200,7 +200,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => window.location.href = '/'}
-              className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+              className="w-full bg-bidora-ink text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
             >
               Continue Shopping
             </motion.button>
@@ -333,7 +333,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
                         setError('Please enter a delivery address')
                       }
                     }}
-                    className="w-full py-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-bold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-bidora-ink text-white font-bold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
                   >
                     Continue to Payment
                     <ChevronRight size={20} />
@@ -349,8 +349,8 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
                 className="bg-white rounded-2xl shadow-md p-8 border border-gray-100"
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-purple-50 rounded-lg">
-                    <CreditCard size={24} className="text-purple-600" />
+                  <div className="p-3 bg-bidora-paper rounded-lg">
+                    <CreditCard size={24} className="text-bidora-ink" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">Payment Method</h2>
@@ -397,8 +397,8 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
                     whileHover={{ scale: 1.01 }}
                     className={`p-5 border-2 rounded-xl cursor-pointer transition-all ${
                       paymentMethod === 'jazzcash'
-                        ? 'border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50'
-                        : 'border-gray-200 hover:border-purple-200 bg-white'
+                        ? 'border-bidora-ink bg-bidora-paper'
+                        : 'border-gray-200 hover:border-bidora-ink/20 bg-white'
                     }`}
                   >
                     <div className="flex items-start gap-4">
@@ -413,12 +413,12 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
                             setPaymentMethod(e.target.value)
                             setError('')
                           }}
-                          className="w-5 h-5 text-purple-600 cursor-pointer"
+                          className="w-5 h-5 text-bidora-ink cursor-pointer"
                         />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Smartphone size={20} className="text-purple-600" />
+                          <Smartphone size={20} className="text-bidora-ink" />
                           <p className="font-bold text-gray-900">JazzCash</p>
                         </div>
                         <p className="text-sm text-gray-600">Coming soon</p>
@@ -508,7 +508,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setStep(3)}
-                    className="flex-1 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-bidora-ink text-white font-semibold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
                   >
                     Continue to Review
                     <ChevronRight size={20} />
@@ -554,7 +554,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
                     className="pb-6 border-b-2 border-gray-100"
                   >
                     <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <CreditCard size={18} className="text-purple-600" />
+                      <CreditCard size={18} className="text-bidora-ink" />
                       Payment Method
                     </h3>
                     <p className="text-gray-700 font-semibold">
@@ -659,9 +659,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
           >
             <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 sticky top-24 space-y-6">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white flex items-center justify-center text-sm font-bold">
-                  📦
-                </span>
+                <span className="grid h-8 w-8 place-items-center bg-bidora-ink text-white"><Package size={18} aria-hidden="true" /></span>
                 Order Summary
               </h3>
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Check, X, Truck, Package } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import ConfirmationDialog from '../../components/shared/ConfirmationDialog'
 
 interface Order {
   id: string
@@ -29,6 +30,7 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [trackingDrafts, setTrackingDrafts] = useState<Record<string, string>>({})
   const [actionError, setActionError] = useState('')
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -93,7 +95,7 @@ export default function Orders() {
       case 'confirmed':
         return 'bg-blue-50 border-blue-200 text-blue-700'
       case 'shipped':
-        return 'bg-purple-50 border-purple-200 text-purple-700'
+        return 'bg-bidora-paper border-bidora-ink/20 text-bidora-ink'
       case 'delivered':
         return 'bg-green-50 border-green-200 text-green-700'
       case 'cancelled':
@@ -230,7 +232,7 @@ export default function Orders() {
                       <button onClick={() => advanceOrder(order, 'delivered')} className="flex-1 px-4 py-2 border border-green-600 text-green-700 rounded-lg hover:bg-green-50 font-medium">Confirm delivery</button>
                     )}
                     {(order.status === 'pending') && (
-                      <button onClick={() => advanceOrder(order, 'cancelled')} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">Cancel</button>
+                      <button onClick={() => setCancelTarget(order)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">Cancel</button>
                     )}
                   </div>
                 </div>
@@ -251,7 +253,7 @@ export default function Orders() {
                   onClick={() => setSelectedOrder(null)}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  ✕
+                  <X size={18} aria-hidden="true" />
                 </button>
               </div>
 
@@ -330,6 +332,14 @@ export default function Orders() {
           </div>
         </div>
       )}
+      {cancelTarget && <ConfirmationDialog
+        title="Cancel this order?"
+        description={`Cancel the order for ${cancelTarget.product_title}? This cannot be undone.`}
+        confirmText="Cancel order"
+        danger
+        onClose={() => setCancelTarget(null)}
+        onConfirm={async () => { await advanceOrder(cancelTarget, 'cancelled'); setCancelTarget(null) }}
+      />}
     </div>
   )
 }

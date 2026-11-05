@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, X, Sliders } from 'lucide-react'
+import { Search, X, Sliders, Package, Star } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../services/supabase'
 
@@ -316,7 +316,7 @@ export default function SearchPage() {
                     className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all overflow-hidden cursor-pointer group"
                   >
                     <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-48 overflow-hidden">
-                      {product.images?.[0]?.image_url ? <img src={product.images[0].image_url} alt={product.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy" /> : <div className="h-full flex items-center justify-center text-gray-400">📦</div>}
+                      {product.images?.[0]?.image_url ? <img src={product.images[0].image_url} alt={product.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy" /> : <div className="h-full flex items-center justify-center text-gray-400"><Package size={28} aria-hidden="true" /></div>}
                     </div>
 
                     <div className="p-4">
@@ -327,9 +327,7 @@ export default function SearchPage() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-1">
                           {[...Array(5)].map((_, i) => (
-                            <span key={i} className={i < Math.round(product.rating) ? '⭐' : '☆'}>
-                              {i < Math.round(product.rating) ? '⭐' : '☆'}
-                            </span>
+                            <Star key={i} size={14} aria-hidden="true" className={i < Math.round(product.rating) ? 'fill-bidora-coral text-bidora-coral' : 'text-gray-300'} />
                           ))}
                         </div>
                         <span className="text-sm text-gray-600">({product.total_reviews})</span>

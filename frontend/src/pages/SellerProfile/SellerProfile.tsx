@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Star, Calendar, MessageCircle, AlertCircle, Shield } from 'lucide-react'
+import { Star, Calendar, MessageCircle, AlertCircle, Shield, Package } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
 
@@ -294,7 +294,7 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
                 className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all overflow-hidden cursor-pointer group border border-gray-100"
               >
                 <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-48 overflow-hidden">
-                  {product.images?.[0]?.image_url ? <img src={product.images[0].image_url} alt={product.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy" /> : <div className="h-full flex items-center justify-center text-gray-400">📦</div>}
+                  {product.images?.[0]?.image_url ? <img src={product.images[0].image_url} alt={product.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy" /> : <div className="h-full flex items-center justify-center text-gray-400"><Package size={28} aria-hidden="true" /></div>}
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900 line-clamp-2 mb-3 group-hover:text-teal-600 transition-colors">

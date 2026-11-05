@@ -121,7 +121,7 @@ export default function SellerDashboard() {
             <div key={stat.label} className="bg-white rounded-xl shadow-sm p-6">
               <div className={`${stat.bg} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>{stat.icon}</div>
               <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{loading ? '—' : stat.value}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{loading ? 'Loading' : stat.value}</p>
             </div>
           ))}
         </div>
