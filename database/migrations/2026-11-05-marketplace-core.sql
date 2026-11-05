@@ -330,6 +330,8 @@ DROP POLICY IF EXISTS "products_update_admin" ON products;
 CREATE POLICY "products_update_admin" ON products FOR UPDATE USING (EXISTS(SELECT 1 FROM admins WHERE admins.user_id=auth.uid())) WITH CHECK (EXISTS(SELECT 1 FROM admins WHERE admins.user_id=auth.uid()));
 DROP POLICY IF EXISTS "products_delete_admin" ON products;
 CREATE POLICY "products_delete_admin" ON products FOR DELETE USING (EXISTS(SELECT 1 FROM admins WHERE admins.user_id=auth.uid()));
+DROP POLICY IF EXISTS "products_delete_own_unapproved" ON products;
+CREATE POLICY "products_delete_own_unapproved" ON products FOR DELETE USING (seller_id=auth.uid() AND status IN ('pending','rejected'));
 DROP POLICY IF EXISTS "products_insert_seller" ON products;
 CREATE POLICY "products_insert_seller" ON products FOR INSERT WITH CHECK (
   auth.uid()=seller_id AND EXISTS(SELECT 1 FROM users WHERE users.id=auth.uid() AND users.account_type='seller')
@@ -338,6 +340,10 @@ DROP POLICY IF EXISTS "auctions_view_active" ON auctions;
 CREATE POLICY "auctions_view_active" ON auctions FOR SELECT USING (seller_id=auth.uid() OR (status IN ('active','ended') AND EXISTS(SELECT 1 FROM products WHERE products.id=auctions.product_id AND products.status='approved')));
 DROP POLICY IF EXISTS "auctions_insert_seller" ON auctions;
 CREATE POLICY "auctions_insert_seller" ON auctions FOR INSERT WITH CHECK (auth.uid()=seller_id AND EXISTS(SELECT 1 FROM products WHERE products.id=auctions.product_id AND products.seller_id=auth.uid() AND products.is_auction=true));
+DROP POLICY IF EXISTS "product_images_delete_own" ON product_images;
+CREATE POLICY "product_images_delete_own" ON product_images FOR DELETE USING (
+  EXISTS(SELECT 1 FROM products WHERE products.id=product_images.product_id AND products.seller_id=auth.uid() AND products.status IN ('pending','rejected'))
+);
 DROP POLICY IF EXISTS "bids_insert_authenticated" ON bids;
 DROP POLICY IF EXISTS "bids_view_active" ON bids;
 CREATE POLICY "bids_view_active" ON bids FOR SELECT USING (

@@ -54,6 +54,7 @@ export default function CreateListing() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
+    e.currentTarget.value = ''
 
     // Limit to 5 images
     if (files.length + images.length > 5) {
@@ -61,7 +62,14 @@ export default function CreateListing() {
       return
     }
 
-    setImages([...images, ...files])
+    const invalidFile = files.find((file) => !file.type.startsWith('image/') || file.size > 10 * 1024 * 1024)
+    if (invalidFile) {
+      setError(`${invalidFile.name} must be an image no larger than 10 MB.`)
+      return
+    }
+
+    setError('')
+    setImages((current) => [...current, ...files])
 
     // Create preview URLs
     files.forEach((file) => {
@@ -83,12 +91,14 @@ export default function CreateListing() {
     setError('')
     setSuccess('')
     setLoading(true)
+    let createdProductId: string | null = null
+    const uploadedPaths: string[] = []
 
     try {
       if (!user) throw new Error('Not authenticated')
       if (!formData.title.trim()) throw new Error('Title is required')
       if (!formData.description.trim()) throw new Error('Description is required')
-      if (formData.price <= 0) throw new Error('Price must be greater than 0')
+      if (!Number.isFinite(formData.price) || formData.price <= 0) throw new Error('Enter a valid price greater than 0')
       if (images.length === 0) throw new Error('At least 1 image is required')
 
       // Create product
@@ -112,6 +122,7 @@ export default function CreateListing() {
       if (!productData || productData.length === 0) throw new Error('Failed to create product')
 
       const productId = productData[0].id
+      createdProductId = productId
 
       // Upload images
       for (let i = 0; i < images.length; i++) {
@@ -123,6 +134,7 @@ export default function CreateListing() {
           .upload(fileName, file)
 
         if (uploadError) throw uploadError
+        uploadedPaths.push(fileName)
 
         // Get public URL
         const { data: publicUrlData } = supabase.storage
@@ -157,6 +169,8 @@ export default function CreateListing() {
         if (auctionError) throw auctionError
       }
 
+      createdProductId = null
+
       setSuccess('✅ Listing created successfully! Pending admin approval.')
       setFormData({
         title: '',
@@ -177,6 +191,16 @@ export default function CreateListing() {
         window.location.href = '/dashboard'
       }, 2000)
     } catch (err: any) {
+      if (createdProductId) {
+        const imageDelete = await supabase.from('product_images').delete().eq('product_id', createdProductId)
+        const storageDelete = uploadedPaths.length
+          ? await supabase.storage.from('listing-images').remove(uploadedPaths)
+          : { error: null }
+        const productDelete = await supabase.from('products').delete().eq('id', createdProductId)
+        if (imageDelete.error || storageDelete.error || productDelete.error) {
+          console.error('Could not fully clean up failed listing:', imageDelete.error || storageDelete.error || productDelete.error)
+        }
+      }
       setError(err.message || 'Failed to create listing')
     } finally {
       setLoading(false)

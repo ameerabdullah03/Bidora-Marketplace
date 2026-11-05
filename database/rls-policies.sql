@@ -138,6 +138,10 @@ CREATE POLICY "products_update_own"
   USING (seller_id = auth.uid())
   WITH CHECK (seller_id = auth.uid());
 
+CREATE POLICY "products_delete_own_unapproved"
+  ON products FOR DELETE
+  USING (seller_id = auth.uid() AND status IN ('pending', 'rejected'));
+
 CREATE POLICY "products_update_admin"
   ON products FOR UPDATE
   USING (EXISTS (SELECT 1 FROM admins WHERE admins.user_id = auth.uid()))
@@ -169,6 +173,17 @@ CREATE POLICY "product_images_insert"
       SELECT 1 FROM products
       WHERE products.id = product_images.product_id
       AND products.seller_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "product_images_delete_own"
+  ON product_images FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM products
+      WHERE products.id = product_images.product_id
+        AND products.seller_id = auth.uid()
+        AND products.status IN ('pending', 'rejected')
     )
   );
 
