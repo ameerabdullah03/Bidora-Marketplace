@@ -14,7 +14,7 @@
 | Privacy requests | Migration applied; RLS enabled; 3 policies present | Still verify row access with buyer/admin accounts, define a trusted fulfillment procedure, and publish a support route. Requests do not automatically delete accounts. |
 | General marketplace categories | Migration applied; UI verified | Confirm nested categories in listing forms and verify existing listings still reference their preserved category IDs. |
 | Category transaction rules | Database triggers installed | Verify with real accounts that goods can use checkout/auction and jobs, services, and property remain contact-only. |
-| First administrator | Not provisioned; live count is 0 | Choose a verified Supabase Auth account for the first admin, then confirm the exact privileged grant. |
+| First administrator | Provisioned to the confirmed, verified account | Verify admin-only moderation and privacy queue access with the account; acceptance checks remain outstanding. |
 | Business details | Pending | Owner supplies legal operator name, address, support contact, and any required registration/tax details. Do not invent these values. |
 | Third-party and asset review | Source scan complete | `npm audit` found no known vulnerabilities. Confirm uploaded seller images are authorized and review provider behavior on the final domain. |
 | Signup and recovery email | Pending | Configure and verify Gmail SMTP in Supabase without sharing the app password in chat. Test signup confirmation and password recovery. |
