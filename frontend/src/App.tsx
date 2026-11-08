@@ -23,6 +23,9 @@ const Checkout = lazy(() => import('./pages/Checkout/Checkout'))
 const Favorites = lazy(() => import('./pages/Favorites/Favorites'))
 const PrivacyPolicy = lazy(() => import('./pages/Legal/PrivacyPolicy'))
 const TermsAndConditions = lazy(() => import('./pages/Legal/TermsAndConditions'))
+const CookiePolicy = lazy(() => import('./pages/Legal/CookiePolicy'))
+const RefundPolicy = lazy(() => import('./pages/Legal/RefundPolicy'))
+const PrivacyRequestsAdmin = lazy(() => import('./pages/AdminPanel/PrivacyRequests'))
 
 function PageLoading() {
   return <div className="flex min-h-[50vh] items-center justify-center text-bidora-muted"><span className="mr-3 h-5 w-5 animate-spin border-2 border-bidora-ink/20 border-t-bidora-ink" aria-hidden="true" />Loading Bidora</div>
@@ -58,15 +61,17 @@ function AppContent() {
     else if (path === '/checkout') setCurrentPage('checkout')
     else if (path === '/privacy') setCurrentPage('privacy')
     else if (path === '/terms') setCurrentPage('terms')
+    else if (path === '/cookies') setCurrentPage('cookies')
+    else if (path === '/refunds') setCurrentPage('refunds')
     else setCurrentPage('home')
   }, [window.location.pathname, window.location.search])
 
   let page: ReactNode
-  if (loading && currentPage !== 'privacy' && currentPage !== 'terms') page = <PageLoading />
+  if (loading && !['privacy', 'terms', 'cookies', 'refunds'].includes(currentPage)) page = <PageLoading />
   else if (currentPage === 'auth') page = <AuthPage />
   else if (currentPage === 'dashboard') page = <SellerDashboard />
   else if (currentPage === 'create-listing') page = <CreateListing />
-  else if (currentPage === 'admin') page = <AdminPanel />
+  else if (currentPage === 'admin') page = pageParams.view === 'privacy' ? <PrivacyRequestsAdmin /> : <AdminPanel />
   else if (currentPage === 'product') page = <ProductDetail productId={pageParams.id || ''} />
   else if (currentPage === 'search') page = <SearchPage />
   else if (currentPage === 'seller') page = <SellerProfile sellerId={pageParams.id || ''} />
@@ -77,6 +82,8 @@ function AppContent() {
   else if (currentPage === 'checkout') page = <Checkout productId={pageParams.id} auctionId={pageParams.auctionId} />
   else if (currentPage === 'privacy') page = <PrivacyPolicy />
   else if (currentPage === 'terms') page = <TermsAndConditions />
+  else if (currentPage === 'cookies') page = <CookiePolicy />
+  else if (currentPage === 'refunds') page = <RefundPolicy />
   else page = <HomePage />
 
   return <Suspense fallback={<PageLoading />}>{page}</Suspense>

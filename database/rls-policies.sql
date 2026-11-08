@@ -15,13 +15,14 @@ ALTER TABLE bids ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.privacy_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 
 -- Start with no client privileges, then grant only the operations used by the app.
 REVOKE ALL ON TABLE public.users, public.admins, public.favorites, public.categories,
   public.products, public.product_images, public.auctions, public.bids, public.orders,
-  public.reviews, public.reports, public.conversations, public.messages
+  public.reviews, public.reports, public.conversations, public.messages, public.privacy_requests
   FROM PUBLIC, anon, authenticated;
 
 GRANT SELECT ON TABLE public.users, public.admins, public.categories, public.products,
@@ -35,6 +36,9 @@ GRANT INSERT, DELETE ON TABLE public.product_images TO authenticated;
 GRANT INSERT ON TABLE public.auctions, public.reviews, public.reports, public.conversations TO authenticated;
 GRANT SELECT, INSERT, DELETE ON TABLE public.favorites TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON TABLE public.messages TO authenticated;
+GRANT SELECT ON TABLE public.privacy_requests TO authenticated;
+GRANT INSERT (user_id, request_type) ON TABLE public.privacy_requests TO authenticated;
+GRANT UPDATE (status, completed_at) ON TABLE public.privacy_requests TO authenticated;
 GRANT USAGE, SELECT ON SEQUENCE public.product_images_id_seq, public.reviews_id_seq,
   public.reports_id_seq, public.messages_id_seq TO authenticated;
 
@@ -382,3 +386,18 @@ CREATE POLICY "messages_update_read_status"
         AND (conversations.buyer_id = auth.uid() OR conversations.seller_id = auth.uid())
     )
   );
+
+CREATE POLICY "privacy_requests_view_own_or_admin"
+  ON public.privacy_requests FOR SELECT TO authenticated
+  USING (user_id = auth.uid() OR EXISTS (
+    SELECT 1 FROM public.admins WHERE admins.user_id = auth.uid()
+  ));
+
+CREATE POLICY "privacy_requests_insert_own"
+  ON public.privacy_requests FOR INSERT TO authenticated
+  WITH CHECK (user_id = auth.uid() AND status = 'received' AND completed_at IS NULL);
+
+CREATE POLICY "privacy_requests_update_admin"
+  ON public.privacy_requests FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.admins WHERE admins.user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.admins WHERE admins.user_id = auth.uid()));

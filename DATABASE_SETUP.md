@@ -21,7 +21,7 @@ Do not run `database/schema-simplified.sql`; it is a legacy reference. If a simp
 
 ### Existing canonical installation
 
-Use this path only when `database/schema.sql` **and** the baseline `database/rls-policies.sql` have already been applied. Back up the project, then run `database/migrations/2026-11-05-marketplace-core.sql` once. It upgrades the existing canonical installation with profile backfill, favorites/admin tables, atomic marketplace functions, rating/message triggers, and the current policy definitions.
+Use this path only when `database/schema.sql` **and** the baseline `database/rls-policies.sql` have already been applied. Back up the project, then run `database/migrations/2026-11-05-marketplace-core.sql` once. It upgrades the existing canonical installation with profile backfill, favorites/admin tables, atomic marketplace functions, rating/message triggers, and the current policy definitions. Apply `database/migrations/2026-11-08-privacy-requests.sql` as a separate additive migration to enable the privacy request form and admin queue. It creates a minimal table with row-level policies; it does not delete accounts automatically.
 
 If only `schema.sql` was applied, finish the new-project steps below before using the app. The RLS script is a one-time setup script and is not intended to be rerun over an installation that already has policies.
 
@@ -56,6 +56,7 @@ After the selected SQL path completes successfully:
    - messages
    - admins
    - favorites
+   - privacy_requests
 
 3. Click on **categories** → you should see 6 categories pre-loaded (Phones, Laptops, Audio, etc.)
 

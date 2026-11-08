@@ -7,7 +7,7 @@
   --color-bidora-paper: #f7f5ee;
   --color-bidora-lime: #d9ef69;
   --color-bidora-coral: #f48262;
-  --color-bidora-muted: #718078;
+  --color-bidora-muted: #5f6b64;
   --font-display: ui-serif, Georgia, Cambria, "Times New Roman", serif;
 }
 
@@ -65,11 +65,16 @@ html[data-theme="dark"] textarea,
 html[data-theme="dark"] select { background-color: #18241f; color: #e8eee9; border-color: rgb(232 238 233 / .25); }
 html[data-theme="dark"] input::placeholder,
 html[data-theme="dark"] textarea::placeholder { color: #aab9b0; }
-html[data-theme="dark"] .bg-bidora-ink { background-color: #d9ef69 !important; color: #102c25 !important; }
 html[data-theme="dark"] .text-white\/80,
 html[data-theme="dark"] .text-white\/65,
 html[data-theme="dark"] .text-white\/60,
 html[data-theme="dark"] .text-white\/55 { color: #c3cec7 !important; }
+html:not([data-theme="dark"]) .text-gray-500 { color: #5f6b64 !important; }
+html:not([data-theme="dark"]) .text-gray-400 { color: #6e7b74 !important; }
+html:not([data-theme="dark"]) .text-gray-300 { color: #77837b !important; }
+html[data-theme="dark"] button.bg-bidora-ink,
+html[data-theme="dark"] a.bg-bidora-ink,
+html[data-theme="dark"] .btn-primary { background-color: #d9ef69 !important; color: #102c25 !important; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -78,7 +83,7 @@ html[data-theme="dark"] .text-white\/55 { color: #c3cec7 !important; }
 @media print {
   @page { margin: 16mm; }
   html, body { background: #fff !important; color: #111 !important; font-size: 11pt; }
-  header, footer, .skip-link, .print-hidden, [aria-label="Cookie notice"], [aria-label="Back to top"],  .scroll-progress { display: none !important; }
+  header, footer, .skip-link, .print-hidden, [aria-label="Cookie consent"], [aria-label="Back to top"], .scroll-progress { display: none !important; }
   main { min-height: 0 !important; }
   a { color: inherit !important; text-decoration: underline; }
   article, section, .bg-bidora-paper, .bg-white { background: #fff !important; color: #111 !important; box-shadow: none !important; }

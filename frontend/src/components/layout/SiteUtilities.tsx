@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ArrowUp, MessageCircle, Moon, Sun, X } from 'lucide-react'
+import { captureUtmAttribution } from '../../services/attribution'
 
 export type Theme = 'light' | 'dark'
 interface ThemeContextValue { theme: Theme; toggleTheme: () => void }
@@ -49,16 +50,21 @@ export function ScrollProgress() {
 export function CookieNotice() {
   const [visible, setVisible] = useState(false)
   useEffect(() => {
-    try { setVisible(localStorage.getItem('bidora-cookie-notice') !== 'dismissed') } catch { setVisible(false) }
+    try { setVisible(localStorage.getItem('bidora-cookie-notice-v2') !== 'dismissed') } catch { setVisible(false) }
   }, [])
-  const dismiss = () => {
-    try { localStorage.setItem('bidora-cookie-notice', 'dismissed') } catch { /* storage may be disabled */ }
+  const chooseStorage = (allowCampaign: boolean) => {
+    try {
+      localStorage.setItem('bidora-campaign-consent', allowCampaign ? 'allowed' : 'essential')
+      localStorage.setItem('bidora-cookie-notice-v2', 'dismissed')
+      if (!allowCampaign) sessionStorage.removeItem('bidora-utm')
+    } catch { /* storage may be disabled */ }
+    if (allowCampaign) captureUtmAttribution(window.location.search)
     setVisible(false)
   }
   if (!visible) return null
-  return <aside aria-label="Cookie notice" className="fixed bottom-4 left-4 z-[80] max-w-sm border border-bidora-ink/15 bg-bidora-paper p-4 text-bidora-ink shadow-xl">
-    <div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-bold">A note about browser storage</h2><p className="mt-1 text-xs leading-5 text-bidora-muted">Bidora uses essential sign-in storage and saves your display preference. We do not use advertising cookies.</p><a className="mt-2 inline-block text-xs font-bold underline underline-offset-2" href="/privacy">Read the privacy policy</a></div><button type="button" onClick={dismiss} aria-label="Dismiss cookie notice" className="p-1 hover:bg-bidora-ink/10"><X size={16} /></button></div>
-    <button type="button" onClick={dismiss} className="mt-3 border border-bidora-ink bg-bidora-ink px-3 py-2 text-xs font-bold text-white hover:bg-bidora-deep">Understood</button>
+  return <aside aria-label="Cookie consent" className="fixed bottom-4 left-4 z-[80] max-w-sm border border-bidora-ink/15 bg-bidora-paper p-4 text-bidora-ink shadow-xl">
+    <div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-bold">Browser storage choices</h2><p className="mt-1 text-xs leading-5 text-bidora-muted">Essential storage keeps you signed in and saves preferences. Optional campaign tags use session storage. No advertising or analytics cookies are enabled.</p><a className="mt-2 inline-block text-xs font-bold underline underline-offset-2" href="/cookies">Read the cookie policy</a></div><button type="button" onClick={() => chooseStorage(false)} aria-label="Continue with essential storage only" className="p-1 hover:bg-bidora-ink/10"><X size={16} /></button></div>
+    <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => chooseStorage(false)} className="border border-bidora-ink/30 px-3 py-2 text-xs font-bold hover:bg-bidora-paper">Essential only</button><button type="button" onClick={() => chooseStorage(true)} className="border border-bidora-ink/30 px-3 py-2 text-xs font-bold hover:bg-bidora-paper">Allow campaign tags</button></div>
   </aside>
 }
 

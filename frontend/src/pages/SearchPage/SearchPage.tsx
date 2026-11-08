@@ -330,7 +330,7 @@ export default function SearchPage() {
                             <Star key={i} size={14} aria-hidden="true" className={i < Math.round(product.rating) ? 'fill-bidora-coral text-bidora-coral' : 'text-gray-300'} />
                           ))}
                         </div>
-                        <span className="text-sm text-gray-600">({product.total_reviews})</span>
+                        <span className="text-sm text-gray-600">{product.total_reviews > 0 ? `(${product.total_reviews} reviews)` : 'No reviews yet'}</span>
                       </div>
 
                       <p className="text-2xl font-bold text-teal-600 mb-2">

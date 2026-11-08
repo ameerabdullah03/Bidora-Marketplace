@@ -27,7 +27,7 @@ export default function Hero() {
               <div className="absolute inset-3 rounded-[1.7rem] border border-white/25" /><div className="absolute left-6 top-6 grid h-14 w-14 grid-cols-2 gap-1 rounded-xl bg-[#263d35] p-2 shadow-inner"><i className="rounded-full bg-[#b7c2b6]"/><i className="rounded-full bg-[#b7c2b6]"/><i className="rounded-full bg-[#b7c2b6]"/></div><div className="h-3 w-3 rounded-full bg-white/70 shadow-[0_0_16px_white]" />
             </div>
           </div>
-          <div className="absolute bottom-6 left-5 z-20 border border-white/15 bg-bidora-deep/90 px-4 py-3 text-white sm:bottom-8 sm:left-8"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-white/60">Buy, sell, or bid</p><p className="mt-1 text-sm font-semibold">Listings across Pakistan</p></div>
+          <div className="absolute bottom-6 left-5 z-20 border border-white/15 bg-bidora-deep/90 px-4 py-3 text-white sm:bottom-8 sm:left-8"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-white/60">Buy, sell, or bid</p><p className="mt-1 text-sm font-semibold">Explore electronics</p></div>
           <div className="absolute right-5 top-20 z-20 rotate-3 bg-bidora-lime px-3 py-2 text-[10px] font-black tracking-wide text-bidora-ink sm:right-9 sm:top-24">PHONES · AUDIO · CAMERAS</div>
         </div>
       </div>

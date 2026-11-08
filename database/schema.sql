@@ -426,6 +426,19 @@ CREATE TABLE IF NOT EXISTS reports (
   resolved_at TIMESTAMP WITH TIME ZONE
 );
 
+-- Minimal, authenticated access, correction, and deletion request queue.
+CREATE TABLE IF NOT EXISTS public.privacy_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  request_type TEXT NOT NULL CHECK (request_type IN ('deletion', 'access', 'correction')),
+  status TEXT NOT NULL DEFAULT 'received' CHECK (status IN ('received', 'in_review', 'completed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  completed_at TIMESTAMPTZ,
+  CHECK ((status = 'completed') = (completed_at IS NOT NULL))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS privacy_requests_one_open_per_user
+  ON public.privacy_requests(user_id) WHERE status IN ('received', 'in_review');
+
 -- ============================================
 -- 10. CONVERSATIONS TABLE (messaging)
 -- ============================================

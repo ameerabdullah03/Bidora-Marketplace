@@ -246,7 +246,7 @@ Do not use the legacy `schema-simplified.sql` for a new installation. Follow [`A
 - Approved products visible to all
 
 ### Frontend
-- No sensitive data stored in localStorage
+- Supabase Auth persists sign-in state in browser storage; Bidora uses local storage for display and notice preferences and session storage for temporary campaign tags. Campaign tags are attached to signup metadata only after an optional opt-in.
 - Session managed by Supabase Auth
 - CORS configured on Supabase
 
@@ -278,23 +278,15 @@ For issues, questions, or feedback:
 4. Configure custom SMTP for public signup and recovery email, then verify delivery. The current dashboard rate limit is 2 Auth emails/hour; the built-in sender is not suitable for general public delivery.
 5. Integrate a payment provider through trusted server callbacks before enabling online payments. SMS notifications also need provider configuration.
 
-## 📊 Metrics
+## Project status
 
-**Current Status:**
 - Core marketplace, seller, admin, auction, checkout, and messaging pages are implemented
-- Frontend TypeScript and Vite production build pass; route-based code splitting keeps the entry chunk below 500 KB
+- Frontend TypeScript and Vite production build pass
 - Cash-on-delivery order flow is implemented; online payment gateways are pending
 - Live Supabase migration and storage bucket setup are verified; first-admin provisioning, real-account acceptance checks, Cloudflare Pages deployment, production Auth URLs, and custom SMTP remain launch steps
 
-**Goals (By Launch):**
-- 100+ daily active users
-- 500+ product listings
-- 50+ daily transactions
-- 4.5+ average seller rating
-- Zero security incidents
-
 ---
 
-**Built with ❤️ for Pakistan's tech community**
+Built for Pakistan's tech community.
 
 Bidora - Discover. Bid. Buy.

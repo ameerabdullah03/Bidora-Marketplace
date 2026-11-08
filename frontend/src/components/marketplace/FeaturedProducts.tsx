@@ -53,7 +53,7 @@ export default function FeaturedProducts() {
   return <section className="relative overflow-hidden bg-white py-16 sm:py-24">
     <div className="mx-auto max-w-7xl px-5 sm:px-8">
       <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
-        <div><p className="eyebrow mb-3">Freshly listed</p><h2 className="text-3xl font-extrabold tracking-[-.055em] sm:text-4xl">Good things, just in</h2><p className="mt-3 max-w-xl text-sm leading-6 text-bidora-muted sm:text-base">A rotating selection from sellers across the Bidora marketplace.</p></div>
+        <div><p className="eyebrow mb-3">Freshly listed</p><h2 className="text-3xl font-extrabold tracking-[-.055em] sm:text-4xl">Good things, just in</h2><p className="mt-3 max-w-xl text-sm leading-6 text-bidora-muted sm:text-base">Recent listings approved for the marketplace.</p></div>
         <a href="/search" className="hidden shrink-0 items-center gap-2 border border-bidora-ink/15 px-4 py-2.5 text-sm font-bold transition hover:bg-bidora-paper sm:inline-flex">Browse all <ArrowRight size={15} /></a>
       </div>
       {loading ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5" aria-label="Loading listings">{Array.from({ length: 4 }, (_, i) => <div key={i} className="aspect-[.78] animate-pulse rounded-2xl bg-bidora-paper" />)}</div>

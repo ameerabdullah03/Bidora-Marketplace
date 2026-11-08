@@ -285,11 +285,11 @@ export default function Orders() {
                       <span className="font-semibold">Rs. {selectedOrder.price.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Shipping</span>
-                      <span className="font-semibold">Rs. 0</span>
+                      <span className="text-gray-600">Delivery</span>
+                      <span className="text-right text-xs font-semibold">Not included. Confirm the cost with the seller.</span>
                     </div>
                     <div className="border-t pt-2 flex justify-between">
-                      <span className="font-semibold">Total</span>
+                      <span className="font-semibold">Item total</span>
                       <span className="font-bold text-teal-600">Rs. {selectedOrder.price.toLocaleString()}</span>
                     </div>
                   </div>

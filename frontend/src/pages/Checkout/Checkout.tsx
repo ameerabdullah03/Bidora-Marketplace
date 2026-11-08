@@ -227,7 +227,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
           animate={{ opacity: 1, y: 0 }}
           className="mb-12"
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Secure Checkout</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Checkout</h1>
           <p className="text-gray-600">Complete your purchase in 3 simple steps</p>
         </motion.div>
 
@@ -597,7 +597,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
                       }}
                       className="mt-1.5 w-5 h-5 text-teal-600 rounded cursor-pointer"
                     />
-                    <span className="text-sm text-gray-700">I confirm this order and understand that payment is due in cash when the order is delivered.
+                    <span className="text-sm text-gray-700">I confirm this order. Payment is due in cash on delivery. The displayed total is the item price only. I will confirm any delivery charge with the seller before ordering.
                     </span>
                   </motion.label>
                 </div>
@@ -688,19 +688,19 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-semibold text-gray-900">Free</span>
+                  <span className="text-gray-600">Delivery</span>
+                  <span className="text-right text-xs font-semibold text-gray-900">Confirm the cost with the seller</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Taxes</span>
-                  <span className="text-xs text-gray-500 font-semibold">Included</span>
+                  <span className="text-gray-600">Bidora service fee</span>
+                  <span className="font-semibold text-gray-900">None added</span>
                 </div>
               </div>
 
               <div className="border-t-2 border-gray-100 pt-4">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900">Total</span>
-                  <span className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                  <span className="text-3xl font-bold text-bidora-ink">
                     Rs. {totalPrice.toLocaleString()}
                   </span>
                 </div>
@@ -715,10 +715,10 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
               >
                 <p className="font-semibold mb-1 flex items-center gap-2">
                   <Check size={16} />
-                  100% Secure Checkout
+                  Order details
                 </p>
                 <p className="text-xs opacity-90">
-                  Your payment information is encrypted and protected
+                  Cash on delivery is recorded by Bidora. Delivery charges are not calculated or collected here. Confirm any delivery cost with the seller before placing an order. The total shown is the item price only.
                 </p>
               </motion.div>
             </div>

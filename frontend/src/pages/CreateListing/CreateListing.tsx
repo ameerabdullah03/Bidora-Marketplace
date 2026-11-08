@@ -367,7 +367,7 @@ export default function CreateListing() {
                   <div key={idx} className="relative group">
                     <img
                       src={url}
-                      alt={`Preview ${idx}`}
+                      alt={`Uploaded product image preview ${idx + 1}`}
                       className="w-full h-24 object-cover rounded-lg border border-gray-300"
                     />
                     <button
@@ -382,6 +382,11 @@ export default function CreateListing() {
               </div>
             )}
           </div>
+
+          <label className="flex items-start gap-3 border border-gray-200 p-4 text-sm leading-6 text-gray-700">
+            <input type="checkbox" required className="mt-1 accent-bidora-ink" />
+            <span>I confirm that I own or have permission to use every image and item description submitted with this listing.</span>
+          </label>
 
           {/* Auction Option */}
           <div>

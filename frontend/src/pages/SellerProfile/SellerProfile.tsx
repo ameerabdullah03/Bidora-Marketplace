@@ -135,7 +135,7 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
                   <div className="flex items-center gap-2">
                     <Shield size={16} className="text-teal-600" />
                     <span className="text-sm font-semibold text-teal-600 capitalize">
-                      Verified {seller.account_type || 'Seller'}
+                      {(seller.account_type || 'Seller').replace(/^./, letter => letter.toUpperCase())}
                     </span>
                   </div>
                 </div>
@@ -164,7 +164,7 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
                   ))}
                 </div>
                 <span className="font-bold text-gray-900">
-                  {seller.rating?.toFixed(1)} ({seller.total_reviews} reviews)
+                  {seller.total_reviews > 0 ? `${seller.rating.toFixed(1)} (${seller.total_reviews} reviews)` : 'No reviews yet'}
                 </span>
               </motion.div>
 
@@ -193,15 +193,15 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
           >
             <motion.div
               variants={itemVariants}
               whileHover={{ y: -4 }}
               className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
             >
-              <p className="text-sm text-gray-600 mb-2 font-semibold">Total Listings</p>
-              <p className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+              <p className="text-sm text-gray-600 mb-2 font-semibold">Listings shown</p>
+              <p className="text-4xl font-bold text-bidora-ink">
                 {products.length}
               </p>
             </motion.div>
@@ -210,20 +210,8 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
               whileHover={{ y: -4 }}
               className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
             >
-              <p className="text-sm text-gray-600 mb-2 font-semibold">Response Rate</p>
-              <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                95%
-              </p>
-            </motion.div>
-            <motion.div
-              variants={itemVariants}
-              whileHover={{ y: -4 }}
-              className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
-            >
-              <p className="text-sm text-gray-600 mb-2 font-semibold">Positive Feedback</p>
-              <p className="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                {Math.round(seller.rating * 20)}%
-              </p>
+              <p className="text-sm text-gray-600 mb-2 font-semibold">Verified reviews</p>
+              <p className="text-4xl font-bold text-bidora-ink">{seller.total_reviews}</p>
             </motion.div>
           </motion.div>
         </div>
@@ -308,8 +296,7 @@ export default function SellerProfile({ sellerId }: { sellerId: string }) {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-1">
                       <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-semibold text-gray-900">{product.rating?.toFixed(1)}</span>
-                      <span className="text-xs text-gray-500">({product.total_reviews})</span>
+                      {product.total_reviews > 0 ? <><span className="text-sm font-semibold text-gray-900">{product.rating.toFixed(1)}</span><span className="text-xs text-gray-500">({product.total_reviews} reviews)</span></> : <span className="text-xs text-gray-500">No reviews yet</span>}
                     </div>
                     <span className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full capitalize">
                       {product.condition}

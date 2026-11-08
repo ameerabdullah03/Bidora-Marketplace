@@ -10,6 +10,9 @@ export default function SignUp({ onSuccess, onSwitchToLogin }: SignUpProps) {
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [accountType, setAccountType] = useState<'buyer' | 'seller'>('buyer')
+  const [isAdult, setIsAdult] = useState(false)
+  const [acceptsTerms, setAcceptsTerms] = useState(false)
+  const [allowsAttribution, setAllowsAttribution] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -19,12 +22,16 @@ export default function SignUp({ onSuccess, onSwitchToLogin }: SignUpProps) {
     event.preventDefault()
     setError(''); setSuccess('')
     if (password.length < 8) { setError('Use a password with at least 8 characters.'); return }
+    if (!isAdult || !acceptsTerms) { setError('Confirm that you are at least 18 and accept the terms and privacy notice.'); return }
+    if (!allowsAttribution) {
+      try { sessionStorage.removeItem('bidora-utm') } catch { /* storage may be disabled */ }
+    }
     setLoading(true)
     try {
       const { error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { full_name: fullName.trim(), account_type: accountType, attribution: getUtmAttribution() } },
+        options: { data: { full_name: fullName.trim(), account_type: accountType, ...(allowsAttribution ? { attribution: getUtmAttribution() } : {}) } },
       })
       if (signUpError) throw signUpError
       setSuccess('Account created. Check your email to verify your address.')
@@ -49,7 +56,12 @@ export default function SignUp({ onSuccess, onSwitchToLogin }: SignUpProps) {
           <span className="relative mt-2 block"><Lock size={17} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-bidora-muted" /><input type={showPassword ? 'text' : 'password'} value={password} onChange={event => setPassword(event.target.value)} minLength={8} autoComplete="new-password" required className="w-full border border-bidora-ink/20 bg-transparent py-3 pl-10 pr-12" /><button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-bidora-paper">{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></span>
         </label>
         <fieldset><legend className="mb-2 text-sm font-semibold">I want to</legend><div className="grid grid-cols-2 gap-3">{(['buyer', 'seller'] as const).map(type => <label key={type} className={`flex cursor-pointer items-center gap-2 border px-3 py-3 text-sm font-semibold transition-colors ${accountType === type ? 'border-bidora-ink bg-bidora-lime/20' : 'border-bidora-ink/20 hover:bg-bidora-paper'}`}><input type="radio" name="account-type" value={type} checked={accountType === type} onChange={() => setAccountType(type)} /><span>{type === 'buyer' ? 'Buy' : 'Sell'}</span></label>)}</div></fieldset>
-        <p className="text-xs leading-5 text-bidora-muted">By creating an account, you agree to the <a className="font-semibold underline" href="/terms">terms and conditions</a> and acknowledge the <a className="font-semibold underline" href="/privacy">privacy policy</a>.</p>
+        <fieldset className="space-y-3 border-t border-bidora-ink/10 pt-4 text-sm">
+          <legend className="text-sm font-semibold">Before you join</legend>
+          <label className="flex items-start gap-3"><input type="checkbox" checked={isAdult} onChange={event => setIsAdult(event.target.checked)} required className="mt-1 accent-bidora-ink" /><span>I confirm that I am at least 18 years old.</span></label>
+          <label className="flex items-start gap-3"><input type="checkbox" checked={acceptsTerms} onChange={event => setAcceptsTerms(event.target.checked)} required className="mt-1 accent-bidora-ink" /><span>I agree to the <a className="font-semibold underline" href="/terms">terms and conditions</a> and have read the <a className="font-semibold underline" href="/privacy">privacy policy</a>.</span></label>
+        </fieldset>
+        <label className="flex items-start gap-3 text-xs leading-5 text-bidora-muted"><input type="checkbox" checked={allowsAttribution} onChange={event => setAllowsAttribution(event.target.checked)} className="mt-1 accent-bidora-ink" /><span>Optional: include campaign source and campaign type from this link in my signup metadata. This is not required to use Bidora.</span></label>
         {error && <p role="alert" className="border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}{success && <p role="status" className="border border-green-200 bg-green-50 p-3 text-sm text-green-800">{success}</p>}
         <button type="submit" disabled={loading} className="w-full border border-bidora-ink bg-bidora-ink px-4 py-3 font-bold text-white hover:bg-bidora-deep disabled:opacity-60">{loading ? 'Creating account…' : 'Create account'}</button>
       </form>

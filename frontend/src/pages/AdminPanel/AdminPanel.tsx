@@ -181,6 +181,7 @@ export default function AdminPanel() {
             Admin Panel
           </h1>
           <p className="text-xl text-slate-600">Moderate and approve product listings</p>
+          <a href="/admin?view=privacy" className="mt-4 inline-flex border border-bidora-ink px-4 py-2 text-sm font-semibold text-bidora-ink hover:bg-bidora-paper">Privacy requests</a>
         </motion.div>
 
         {/* Stats */}

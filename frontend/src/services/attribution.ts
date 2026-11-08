@@ -1,7 +1,8 @@
-const KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const
+const KEYS = ['utm_source', 'utm_medium', 'utm_campaign'] as const
 export type UtmAttribution = Partial<Record<typeof KEYS[number], string>>
 
 export function captureUtmAttribution(search: string): UtmAttribution {
+  try { if (localStorage.getItem('bidora-campaign-consent') !== 'allowed') return {} } catch { return {} }
   const params = new URLSearchParams(search)
   const values: UtmAttribution = {}
   for (const key of KEYS) {

@@ -385,7 +385,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-600">Product Rating</p>
-                  <span className="font-bold text-gray-900">{product.rating?.toFixed(1)}</span>
+                  {product.total_reviews > 0 ? <span className="font-bold text-gray-900">{product.rating.toFixed(1)}</span> : <span className="font-bold text-gray-600">No reviews yet</span>}
                 </div>
                 <div className="flex gap-1 items-center">
                   {[...Array(5)].map((_, i) => (
@@ -401,7 +401,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
                       />
                     </motion.div>
                   ))}
-                  <span className="text-xs text-gray-600 ml-2">({product.total_reviews} reviews)</span>
+                  {product.total_reviews > 0 && <span className="text-xs text-gray-600 ml-2">({product.total_reviews} reviews)</span>}
                 </div>
               </motion.div>
             </div>
@@ -437,7 +437,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
                       ))}
                     </div>
                     <span className="text-sm font-semibold text-gray-900">
-                      {product.seller_rating?.toFixed(1)} ({product.seller_reviews} reviews)
+                      {product.seller_reviews > 0 ? `${product.seller_rating.toFixed(1)} (${product.seller_reviews} reviews)` : 'No reviews yet'}
                     </span>
                   </div>
                 </div>
