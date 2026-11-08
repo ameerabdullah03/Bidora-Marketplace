@@ -12,7 +12,7 @@ export default function Categories() {
     {loading ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Loading categories">{Array.from({ length: 4 }, (_, i) => <div key={i} className="min-h-36 animate-pulse border border-bidora-ink/10 bg-white/70" />)}</div>
       : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
       {featuredCategories.map(({ id, name }, index) => <a key={id} href={`/search?category=${id}`} className={`group relative flex min-h-36 flex-col justify-between overflow-hidden border border-bidora-ink/10 p-4 transition duration-300 hover:-translate-y-1 hover:border-bidora-ink/25 hover:shadow-lg sm:min-h-40 sm:p-5 ${index % 3 === 1 ? 'bg-[#eeeee5]' : 'bg-white/70'}`}>
-        <span className="flex items-center justify-between text-[10px] font-bold tracking-[.15em] text-bidora-muted"><span>0{index + 1}</span><ArrowUpRight size={15} className="transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" /></span>
+        <span className="flex items-center justify-between text-[10px] font-bold tracking-[.15em] text-bidora-muted"><span>{String(index + 1).padStart(2, '0')}</span><ArrowUpRight size={15} className="transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" /></span>
         <span className="flex items-end justify-between gap-2"><span className="text-sm font-bold leading-tight sm:text-[15px]">{name}</span><PackageOpen size={25} strokeWidth={1.6} aria-hidden="true" className="shrink-0 text-bidora-ink/70 transition-transform group-hover:-rotate-6 group-hover:scale-110" /></span>
       </a>)}
     </div>}
