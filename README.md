@@ -1,13 +1,13 @@
-# Bidora - Pakistan's Electronics Marketplace
+# Bidora - Pakistan's Marketplace
 
-An electronics marketplace for Pakistan combining fixed-price listings and timed auctions.
+Bidora is a general marketplace for Pakistan. Buyers and sellers can trade everyday goods at a set price, while rare and antique items can be offered in timed auctions.
 
 **Tagline**: Discover. Bid. Buy.
 
 ## 🚀 Features
 
 ### For Buyers
-- Browse approved electronics listings
+- Browse approved marketplace listings across categories
 - Search and filter by category, price, condition
 - Participate in timed auctions
 - Direct messaging with sellers
@@ -16,7 +16,7 @@ An electronics marketplace for Pakistan combining fixed-price listings and timed
 
 ### For Sellers
 - Create product listings with up to 5 images
-- List products as fixed price or auction
+- List everyday goods at a fixed price or offer rare and antique finds in timed auctions
 - Manage orders and inventory
 - Build seller reputation through ratings
 - Seller dashboard with live listings, auctions, orders, and rating totals
@@ -27,7 +27,7 @@ An electronics marketplace for Pakistan combining fixed-price listings and timed
 - ✅ Product image uploads to cloud storage
 - ✅ Responsive design (mobile, tablet, desktop)
 - ✅ Row-Level Security (RLS) for data protection
-- ✅ 6 electronics categories
+- ✅ Marketplace categories, including electronics, home and garden, vehicles, fashion, and collectibles
 - ✅ Transaction-safe auction bidding and winner checkout
 - ✅ Order management
 - ✅ In-app messaging
@@ -135,7 +135,7 @@ See [`DATABASE_SETUP.md`](DATABASE_SETUP.md) for the safe fresh-install and exis
 - `users` (marketplace profiles tied to Supabase Auth)
 - `admins` (trusted moderators)
 - `favorites` (saved listings)
-- `categories` (6 electronics categories)
+- `categories` (general marketplace categories, including legacy electronics categories)
 - `products` (seller listings)
 - `product_images` (product photos)
 - `auctions` (timed auctions)
@@ -287,6 +287,6 @@ For issues, questions, or feedback:
 
 ---
 
-Built for Pakistan's tech community.
+Built for Pakistan's local marketplace community.
 
 Bidora - Discover. Bid. Buy.

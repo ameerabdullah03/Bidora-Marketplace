@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Upload, X, AlertCircle } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { useCategories } from '../../hooks/useCategories'
 
 interface ProductFormData {
   title: string
@@ -17,11 +18,12 @@ interface ProductFormData {
 
 export default function CreateListing() {
   const { user } = useAuth()
+  const { categories, loading: categoriesLoading } = useCategories()
   const [formData, setFormData] = useState<ProductFormData>({
     title: '',
     description: '',
     price: 0,
-    category_id: 1,
+    category_id: 0,
     condition: 'new',
     location: 'Karachi',
     is_auction: false,
@@ -34,15 +36,6 @@ export default function CreateListing() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-
-  const categories = [
-    { id: 1, name: 'Phones & Tablets' },
-    { id: 2, name: 'Laptops & Computers' },
-    { id: 3, name: 'Audio & Headphones' },
-    { id: 4, name: 'Wearables' },
-    { id: 5, name: 'Cameras & Photography' },
-    { id: 6, name: 'Gaming & Consoles' },
-  ]
 
   const conditions = [
     { value: 'new', label: 'New' },
@@ -99,6 +92,7 @@ export default function CreateListing() {
       if (!user) throw new Error('Not authenticated')
       if (!formData.title.trim()) throw new Error('Title is required')
       if (!formData.description.trim()) throw new Error('Description is required')
+      if (!categories.some(category => category.id === formData.category_id)) throw new Error('Choose an available category before submitting')
       if (!Number.isFinite(formData.price) || formData.price <= 0) throw new Error('Enter a valid price greater than 0')
       if (images.length === 0) throw new Error('At least 1 image is required')
 
@@ -178,7 +172,7 @@ export default function CreateListing() {
         title: '',
         description: '',
         price: 0,
-        category_id: 1,
+        category_id: 0,
         condition: 'new',
         location: 'Karachi',
         is_auction: false,
@@ -278,8 +272,11 @@ export default function CreateListing() {
               <select
                 value={formData.category_id}
                 onChange={(e) => setFormData({ ...formData, category_id: parseInt(e.target.value) })}
+                required
+                disabled={categoriesLoading || categories.length === 0}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
               >
+                <option value={0} disabled>{categoriesLoading ? 'Loading categories...' : 'Select a category'}</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Search, X, Sliders, Package, Star } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../services/supabase'
+import { useCategories } from '../../hooks/useCategories'
 
 interface Product {
   id: string
@@ -23,13 +24,14 @@ interface FilterOptions {
 }
 
 export default function SearchPage() {
+  const { categories } = useCategories()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<FilterOptions>(() => {
     const params = new URLSearchParams(window.location.search)
     const categoryValue = Number(params.get('category'))
     return {
-      category: Number.isInteger(categoryValue) && categoryValue >= 1 && categoryValue <= 6 ? categoryValue : null,
+      category: Number.isInteger(categoryValue) && categoryValue > 0 ? categoryValue : null,
       minPrice: 0,
       maxPrice: 1000000,
       condition: null,
@@ -74,15 +76,6 @@ export default function SearchPage() {
       setLoading(false)
     }
   }
-
-  const categories = [
-    { id: 1, name: 'Phones & Tablets' },
-    { id: 2, name: 'Laptops & Computers' },
-    { id: 3, name: 'Audio & Headphones' },
-    { id: 4, name: 'Wearables' },
-    { id: 5, name: 'Cameras & Photography' },
-    { id: 6, name: 'Gaming & Consoles' },
-  ]
 
   const conditions = ['new', 'like_new', 'excellent', 'good', 'fair']
 

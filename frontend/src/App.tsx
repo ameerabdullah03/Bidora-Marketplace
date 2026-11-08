@@ -94,7 +94,7 @@ function SiteFrame() {
   useEffect(() => {
     const main = document.getElementById('main-content')
     const pageTitle = document.querySelector('h1')?.textContent?.trim()
-    document.title = pageTitle ? `${pageTitle} | Bidora` : 'Bidora | Buy and sell electronics in Pakistan'
+    document.title = pageTitle ? `${pageTitle} | Bidora` : 'Bidora | Buy, sell, and auction in Pakistan'
     if (main && window.location.hash === '#main-content') main.focus()
   })
   const skipToMain = (event: React.MouseEvent<HTMLAnchorElement>) => {

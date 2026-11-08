@@ -37,7 +37,7 @@ export default function AuctionSection() {
   return <section id="live-auctions" className="bg-bidora-ink px-5 py-16 text-white sm:px-8 sm:py-24">
     <div className="mx-auto max-w-7xl">
       <div className="mb-10 flex flex-col justify-between gap-6 sm:mb-12 md:flex-row md:items-end">
-        <div><p className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.2em] text-bidora-lime"><span className="h-2 w-2 rounded-full bg-bidora-coral" /> Bidora after hours</p><h2 className="text-3xl font-extrabold tracking-[-.055em] sm:text-5xl">The thrill of the find.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/60 sm:text-base">Live auctions for tech worth a second look. Your next great story could be one bid away.</p></div>
+        <div><p className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.2em] text-bidora-lime"><span className="h-2 w-2 rounded-full bg-bidora-coral" /> Bidora after hours</p><h2 className="text-3xl font-extrabold tracking-[-.055em] sm:text-5xl">The thrill of the find.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/60 sm:text-base">Put rare, vintage, and collectible finds up for timed bidding.</p></div>
         <a href="/#live-auctions" className="inline-flex w-fit items-center gap-2 border border-white/25 px-5 py-3 text-sm font-bold transition hover:border-bidora-lime hover:text-bidora-lime">Explore auctions <ArrowRight size={16} /></a>
       </div>
       {loading ? <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">{Array.from({ length: 4 }, (_, i) => <div key={i} className="aspect-[.85] animate-pulse rounded-2xl bg-white/10" />)}</div>

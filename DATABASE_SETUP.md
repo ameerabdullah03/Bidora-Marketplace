@@ -21,7 +21,7 @@ Do not run `database/schema-simplified.sql`; it is a legacy reference. If a simp
 
 ### Existing canonical installation
 
-Use this path only when `database/schema.sql` **and** the baseline `database/rls-policies.sql` have already been applied. Back up the project, then run `database/migrations/2026-11-05-marketplace-core.sql` once. It upgrades the existing canonical installation with profile backfill, favorites/admin tables, atomic marketplace functions, rating/message triggers, and the current policy definitions. Apply `database/migrations/2026-11-08-privacy-requests.sql` as a separate additive migration to enable the privacy request form and admin queue. It creates a minimal table with row-level policies; it does not delete accounts automatically.
+Use this path only when `database/schema.sql` **and** the baseline `database/rls-policies.sql` have already been applied. Back up the project, then run `database/migrations/2026-11-05-marketplace-core.sql` once. It upgrades the existing canonical installation with profile backfill, favorites/admin tables, atomic marketplace functions, rating/message triggers, and the current policy definitions. Apply `database/migrations/2026-11-08-privacy-requests.sql` and `database/migrations/2026-11-08-general-marketplace-categories.sql` as separate additive migrations. The first enables the privacy request form/admin queue; the second adds general categories while preserving existing category IDs and listings.
 
 If only `schema.sql` was applied, finish the new-project steps below before using the app. The RLS script is a one-time setup script and is not intended to be rerun over an installation that already has policies.
 
@@ -58,7 +58,7 @@ After the selected SQL path completes successfully:
    - favorites
    - privacy_requests
 
-3. Click on **categories** → you should see 6 categories pre-loaded (Phones, Laptops, Audio, etc.)
+3. Click on **categories** → after applying the marketplace category migration, you should see general goods categories alongside the existing electronics categories.
 
 Also verify the `public_profiles` view is available and these RPCs appear in the Supabase API schema: `place_auction_bid`, `place_product_order`, `place_auction_order`, and `advance_order_status`. The frontend needs these objects for public seller details, favorites/admin features, bidding, and order workflows.
 
