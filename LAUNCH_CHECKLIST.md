@@ -11,9 +11,10 @@
 | Terms and conditions | Draft added in source | Review the terms and configure a real support route before launch. |
 | Refund and cookie policies | Draft added in source | Confirm operational return/cancellation rules, inspect provider storage on the custom domain, and complete legal review. |
 | Age and form consent | Source gate added | Signup requires 18+ self-attestation and terms/privacy acknowledgement. Listing image rights and order delivery-charge acknowledgements are also required. These are UI checks, not identity verification or a durable consent audit log. |
-| Privacy requests | Source flow added, inactive | Apply `database/migrations/2026-11-08-privacy-requests.sql`, verify RLS with buyer/admin accounts, define a trusted fulfillment procedure, and publish a support route. Requests do not automatically delete accounts. |
-| General marketplace categories | Source and migration added | Apply `database/migrations/2026-11-08-general-marketplace-categories.sql`; verify home, search, and listing forms show nested departments and old listings retain their category IDs. |
-| Category transaction rules | Source and migration added | Verify that eligible goods can use checkout/auction and that jobs, services, and property remain contact-only after applying the category migration. |
+| Privacy requests | Migration applied; RLS enabled; 3 policies present | Still verify row access with buyer/admin accounts, define a trusted fulfillment procedure, and publish a support route. Requests do not automatically delete accounts. |
+| General marketplace categories | Migration applied; UI verified | Confirm nested categories in listing forms and verify existing listings still reference their preserved category IDs. |
+| Category transaction rules | Database triggers installed | Verify with real accounts that goods can use checkout/auction and jobs, services, and property remain contact-only. |
+| First administrator | Not provisioned; live count is 0 | Choose a verified Supabase Auth account for the first admin, then confirm the exact privileged grant. |
 | Business details | Pending | Owner supplies legal operator name, address, support contact, and any required registration/tax details. Do not invent these values. |
 | Third-party and asset review | Source scan complete | `npm audit` found no known vulnerabilities. Confirm uploaded seller images are authorized and review provider behavior on the final domain. |
 | Signup and recovery email | Pending | Configure and verify Gmail SMTP in Supabase without sharing the app password in chat. Test signup confirmation and password recovery. |
