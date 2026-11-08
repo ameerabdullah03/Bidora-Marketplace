@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { Upload, X, AlertCircle } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
-import { useCategories } from '../../hooks/useCategories'
+import { buildCategoryTree, getCategoryPaths, getCategoryRoot, supportsGoodsTransactions, useCategories } from '../../hooks/useCategories'
 
 interface ProductFormData {
   title: string
   description: string
   price: number
   category_id: number
-  condition: 'new' | 'like_new' | 'excellent' | 'good' | 'fair'
+  condition: 'new' | 'like_new' | 'excellent' | 'good' | 'fair' | null
   location: string
   is_auction: boolean
   auction_duration_days: number
@@ -19,6 +19,7 @@ interface ProductFormData {
 export default function CreateListing() {
   const { user } = useAuth()
   const { categories, loading: categoriesLoading } = useCategories()
+  const categoryTree = buildCategoryTree(categories)
   const [formData, setFormData] = useState<ProductFormData>({
     title: '',
     description: '',
@@ -36,6 +37,9 @@ export default function CreateListing() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const selectedRoot = getCategoryRoot(categories, formData.category_id)
+  const isGoodsCategory = supportsGoodsTransactions(categories, formData.category_id)
+  const isServiceOrJob = selectedRoot ? ['services', 'jobs'].includes(selectedRoot.slug) : false
 
   const conditions = [
     { value: 'new', label: 'New' },
@@ -94,7 +98,7 @@ export default function CreateListing() {
       if (!formData.description.trim()) throw new Error('Description is required')
       if (!categories.some(category => category.id === formData.category_id)) throw new Error('Choose an available category before submitting')
       if (!Number.isFinite(formData.price) || formData.price <= 0) throw new Error('Enter a valid price greater than 0')
-      if (images.length === 0) throw new Error('At least 1 image is required')
+      if (images.length === 0 && !isServiceOrJob) throw new Error('At least 1 image is required')
 
       // Create product
       const { data: productData, error: productError } = await supabase
@@ -105,9 +109,9 @@ export default function CreateListing() {
           title: formData.title.trim(),
           description: formData.description.trim(),
           price: formData.price,
-          condition: formData.condition,
+          condition: isGoodsCategory ? formData.condition : null,
           location: formData.location,
-          is_auction: formData.is_auction,
+          is_auction: isGoodsCategory && formData.is_auction,
           stock_quantity: formData.stock_quantity,
           status: 'pending',
         })
@@ -167,7 +171,7 @@ export default function CreateListing() {
 
       createdProductId = null
 
-      setSuccess('Listing created successfully. Pending admin approval. Pending admin approval.')
+      setSuccess('Your listing was submitted for review.')
       setFormData({
         title: '',
         description: '',
@@ -209,7 +213,7 @@ export default function CreateListing() {
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold text-dark-900">Create New Listing</h1>
-          <p className="text-dark-600 mt-1">Add a new product to your inventory</p>
+          <p className="text-dark-600 mt-1">List an item, service, job, or property.</p>
         </div>
       </div>
 
@@ -255,7 +259,7 @@ export default function CreateListing() {
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Describe your product in detail. Include condition, features, and any defects..."
+              placeholder="Describe this item, service, job, or property and include the details buyers should know."
               rows={6}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
               maxLength={2000}
@@ -264,30 +268,33 @@ export default function CreateListing() {
           </div>
 
           {/* Grid: Category, Price, Condition */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`grid grid-cols-1 gap-4 ${isGoodsCategory ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
             <div>
               <label className="block text-sm font-semibold text-dark-900 mb-2">
                 Category *
               </label>
               <select
                 value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: parseInt(e.target.value) })}
+                onChange={(e) => {
+                  const categoryId = parseInt(e.target.value)
+                  const supportsTransactions = supportsGoodsTransactions(categories, categoryId)
+                  setFormData({ ...formData, category_id: categoryId, condition: supportsTransactions ? (formData.condition || 'new') : null, is_auction: supportsTransactions && formData.is_auction })
+                }}
                 required
                 disabled={categoriesLoading || categories.length === 0}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
               >
                 <option value={0} disabled>{categoriesLoading ? 'Loading categories...' : 'Select a category'}</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
+                {categoryTree.map(root => <optgroup key={root.id} label={root.name}>
+                  {(root.children.length ? root.children.flatMap(child => getCategoryPaths(child)) : getCategoryPaths(root)).map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
+                </optgroup>)}
               </select>
+              {!categoriesLoading && categories.length === 0 && <p role="alert" className="mt-2 text-sm text-red-700">Categories are unavailable. Try again later.</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-dark-900 mb-2">
-                Price (PKR) *
+                <label className="block text-sm font-semibold text-dark-900 mb-2">
+                  {isGoodsCategory ? 'Price (PKR) *' : 'Price, rate, or salary (PKR) *'}
               </label>
               <input
                 type="number"
@@ -300,12 +307,12 @@ export default function CreateListing() {
               />
             </div>
 
-            <div>
+            {isGoodsCategory && <div>
               <label className="block text-sm font-semibold text-dark-900 mb-2">
                 Condition *
               </label>
               <select
-                value={formData.condition}
+                value={formData.condition ?? 'new'}
                 onChange={(e) => setFormData({ ...formData, condition: e.target.value as any })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidora-ink"
               >
@@ -315,7 +322,7 @@ export default function CreateListing() {
                   </option>
                 ))}
               </select>
-            </div>
+            </div>}
           </div>
 
           {/* Location */}
@@ -386,7 +393,7 @@ export default function CreateListing() {
           </label>
 
           {/* Auction Option */}
-          <div>
+          {isGoodsCategory && <div>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -416,7 +423,7 @@ export default function CreateListing() {
                 <p className="text-xs text-dark-500 mt-1">Bids must increase by at least Rs. 1,000.</p>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* Submit Button */}
           <div className="flex gap-3 pt-6">

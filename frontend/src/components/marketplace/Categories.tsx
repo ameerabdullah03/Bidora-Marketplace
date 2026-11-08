@@ -1,9 +1,9 @@
 import { ArrowUpRight, PackageOpen } from 'lucide-react'
-import { useCategories } from '../../hooks/useCategories'
+import { buildCategoryTree, useCategories } from '../../hooks/useCategories'
 
 export default function Categories() {
   const { categories, loading } = useCategories()
-  const featuredCategories = categories.slice(0, 8)
+  const featuredCategories = buildCategoryTree(categories)
   return <section className="section-container pt-10">
     <div className="mb-8 flex items-end justify-between gap-5 sm:mb-10">
       <div><p className="eyebrow mb-3">Find something worth keeping</p><h2 className="text-3xl font-extrabold tracking-[-.055em] sm:text-4xl">Browse categories</h2></div>

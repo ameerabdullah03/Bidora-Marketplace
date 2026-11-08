@@ -3,6 +3,7 @@ import { Star, MapPin, Shield, MessageCircle, Heart, Share2, Check, AlertCircle,
 import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { supportsGoodsTransactions, useCategories } from '../../hooks/useCategories'
 
 interface ProductReview {
   id: number
@@ -17,7 +18,7 @@ interface ProductDetail {
   title: string
   description: string
   price: number
-  condition: string
+  condition: string | null
   seller_id: string
   seller_name: string
   seller_rating: number
@@ -32,6 +33,7 @@ interface ProductDetail {
 
 export default function ProductDetail({ productId }: { productId: string }) {
   const { user } = useAuth()
+  const { categories, loading: categoriesLoading } = useCategories()
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
@@ -287,14 +289,14 @@ export default function ProductDetail({ productId }: { productId: string }) {
                 )}
 
                 {/* Condition Badge */}
-                <motion.div
+                {product.condition && <motion.div
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.3 }}
                   className="absolute top-4 left-4 bg-bidora-ink text-white px-3 py-2 rounded-sm font-bold text-sm"
                 >
                   {product.condition}
-                </motion.div>
+                </motion.div>}
 
                 {/* Action Buttons Overlay */}
                 <div className="absolute top-4 right-4 flex gap-2">
@@ -452,7 +454,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <motion.button
+              {!categoriesLoading && supportsGoodsTransactions(categories, product.category_id) && <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => window.location.href = `/messages?seller=${product.seller_id}&product=${product.id}`}
@@ -460,7 +462,8 @@ export default function ProductDetail({ productId }: { productId: string }) {
               >
                 <MessageCircle size={20} />
                 Contact Seller
-              </motion.button>
+              </motion.button>}
+              {!categoriesLoading && !supportsGoodsTransactions(categories, product.category_id) && <p className="border border-gray-200 bg-gray-50 p-4 text-sm leading-6 text-gray-700">Contact the seller to discuss this listing. Bidora checkout is not available for jobs, services, or property.</p>}
 
               <motion.button
                 whileHover={{ scale: 1.02 }}

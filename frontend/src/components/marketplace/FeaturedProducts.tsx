@@ -10,7 +10,7 @@ interface Product {
   price: number
   rating: number | null
   total_reviews: number | null
-  condition: string
+  condition: string | null
   images: Array<{ image_url: string }>
 }
 
@@ -60,7 +60,7 @@ export default function FeaturedProducts() {
         : products.length === 0 ? <div className="rounded-3xl border border-dashed border-bidora-ink/20 bg-bidora-paper/50 px-6 py-14 text-center"><p className="text-lg font-bold">The shelves are waiting.</p><p className="mt-2 text-sm text-bidora-muted">Approved listings will show up here as sellers join.</p><a href="/create-listing" className="mt-5 inline-flex bg-bidora-ink px-5 py-3 text-sm font-bold text-white">List the first one</a></div>
         : <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">{products.map((product, index) => <motion.a key={product.id} href={`/product?id=${encodeURIComponent(product.id)}`} initial={reduceMotion ? false : { opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .045, duration: .35 }} className="group relative overflow-hidden rounded-2xl border border-bidora-ink/10 bg-bidora-paper/50 transition hover:-translate-y-1 hover:shadow-xl">
           <div className="relative aspect-[.94] overflow-hidden bg-[#e9e8df] sm:aspect-[.88]">{product.images?.[0]?.image_url ? <img src={product.images[0].image_url} alt={product.title} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" /> : <div className="grid h-full place-items-center text-bidora-ink/30"><Package size={32} aria-hidden="true" /></div>}
-            <span className="absolute left-3 top-3 rounded-sm bg-bidora-paper/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-bidora-ink">{(product.condition || 'Pre-loved').replaceAll('_', ' ')}</span>
+            {product.condition && <span className="absolute left-3 top-3 rounded-sm bg-bidora-paper/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-bidora-ink">{product.condition.replaceAll('_', ' ')}</span>}
             <button type="button" onClick={event => toggleFavorite(event, product.id)} aria-label={favoriteIds.has(product.id) ? 'Remove saved listing' : 'Save listing'} aria-pressed={favoriteIds.has(product.id)} className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-bidora-ink shadow-sm transition hover:scale-105 hover:text-bidora-coral"><Heart size={17} className={favoriteIds.has(product.id) ? 'fill-bidora-coral text-bidora-coral' : ''} /></button>
           </div>
           <div className="p-3.5 sm:p-4"><h3 className="line-clamp-2 min-h-10 text-sm font-bold leading-5 sm:text-base">{product.title}</h3><div className="mt-2 flex min-h-5 items-center gap-1 text-xs text-bidora-muted">{product.rating ? <><Star size={13} className="fill-bidora-coral text-bidora-coral" /><span className="font-semibold text-bidora-ink">{product.rating.toFixed(1)}</span><span>({product.total_reviews || 0})</span></> : <span>Awaiting first review</span>}</div><p className="mt-3 text-base font-extrabold tracking-tight sm:text-lg">{formatPrice(product.price)}</p><span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-bidora-ink">Take a closer look <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" /></span></div>

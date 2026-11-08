@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react'
 import { Search, X, Sliders, Package, Star } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../services/supabase'
-import { useCategories } from '../../hooks/useCategories'
+import { buildCategoryTree, getCategoryDescendantIds, getCategoryPaths, useCategories, type MarketplaceCategoryNode } from '../../hooks/useCategories'
 
 interface Product {
   id: string
   title: string
   price: number
-  condition: string
+  condition: string | null
   rating: number
   total_reviews: number
   category_id: number
@@ -25,6 +25,7 @@ interface FilterOptions {
 
 export default function SearchPage() {
   const { categories } = useCategories()
+  const categoryTree = buildCategoryTree(categories)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<FilterOptions>(() => {
@@ -42,7 +43,7 @@ export default function SearchPage() {
 
   useEffect(() => {
     searchProducts()
-  }, [filters])
+  }, [filters, categories])
 
   const searchProducts = async () => {
     setLoading(true)
@@ -55,7 +56,10 @@ export default function SearchPage() {
         .lte('price', filters.maxPrice)
 
       if (filters.category) {
-        query = query.eq('category_id', filters.category)
+        const selectedCategory = categories.find(category => category.id === filters.category)
+        const treeNode = selectedCategory ? categoryTree.find(root => root.id === selectedCategory.id) || findCategoryNode(categoryTree, selectedCategory.id) : undefined
+        const categoryIds = treeNode ? getCategoryDescendantIds(treeNode) : [filters.category]
+        query = query.in('category_id', categoryIds)
       }
 
       if (filters.condition) {
@@ -75,6 +79,15 @@ export default function SearchPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const findCategoryNode = (nodes: MarketplaceCategoryNode[], id: number): MarketplaceCategoryNode | undefined => {
+    for (const node of nodes) {
+      if (node.id === id) return node
+      const match: MarketplaceCategoryNode | undefined = findCategoryNode(node.children, id)
+      if (match) return match
+    }
+    return undefined
   }
 
   const conditions = ['new', 'like_new', 'excellent', 'good', 'fair']
@@ -175,34 +188,13 @@ export default function SearchPage() {
 
                   {/* Category */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-3">Category</label>
-                    <div className="space-y-2">
-                      <motion.button
-                        whileHover={{ x: 4 }}
-                        onClick={() => setFilters({ ...filters, category: null })}
-                        className={`w-full text-left px-3 py-2 rounded-lg transition-all ${
-                          filters.category === null
-                            ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        All Categories
-                      </motion.button>
-                      {categories.map(cat => (
-                        <motion.button
-                          key={cat.id}
-                          whileHover={{ x: 4 }}
-                          onClick={() => setFilters({ ...filters, category: cat.id })}
-                          className={`w-full text-left px-3 py-2 rounded-lg transition-all ${
-                            filters.category === cat.id
-                              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {cat.name}
-                        </motion.button>
-                      ))}
-                    </div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-3" htmlFor="category-filter">Category</label>
+                    <select id="category-filter" value={filters.category ?? ''} onChange={event => setFilters({ ...filters, category: event.target.value ? Number(event.target.value) : null })} className="w-full border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-bidora-ink">
+                      <option value="">All categories</option>
+                      {categoryTree.map(root => <optgroup key={root.id} label={root.name}>
+                        {getCategoryPaths(root).map(option => <option key={option.id} value={option.id}>{option.label === root.name ? `All ${root.name}` : option.label.slice(root.name.length + 3)}</option>)}
+                      </optgroup>)}
+                    </select>
                   </div>
 
                   {/* Price Range */}
@@ -331,9 +323,7 @@ export default function SearchPage() {
                       </p>
 
                       <div className="flex items-center justify-between">
-                        <span className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full capitalize">
-                          {product.condition}
-                        </span>
+                        {product.condition && <span className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-sm capitalize">{product.condition.replaceAll('_', ' ')}</span>}
                       </div>
                     </div>
                   </motion.div>

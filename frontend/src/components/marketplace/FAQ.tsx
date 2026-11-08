@@ -5,7 +5,7 @@ const questions = [
   { question: 'How do auctions work?', answer: 'Open an active auction to review its current bid and end time. Sign in to place a bid. The auction page shows whether your bid was accepted.' },
   { question: 'Can I sell on Bidora?', answer: 'Yes. Create an account, choose the seller option, then submit a listing for review. A listing becomes visible to shoppers after it is approved.' },
   { question: 'How do I contact a seller?', answer: 'Open a listing and use its message action. You need to sign in to start or reply to a conversation.' },
-  { question: 'How are orders paid?', answer: 'The current checkout records cash-on-delivery orders. Bidora does not collect card details in this version.' },
+  { question: 'How are orders paid?', answer: 'Eligible goods listings can use cash on delivery. Jobs, services, and property listings use seller contact. Bidora does not collect card details in this version.' },
   { question: 'How can I request account help or privacy information?', answer: 'Use the Help control to find common questions or open your messages. A dedicated support and privacy contact address must be added before launch.' },
 ]
 

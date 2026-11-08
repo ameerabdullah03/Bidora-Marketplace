@@ -27,7 +27,7 @@ Bidora is a general marketplace for Pakistan. Buyers and sellers can trade every
 - ✅ Product image uploads to cloud storage
 - ✅ Responsive design (mobile, tablet, desktop)
 - ✅ Row-Level Security (RLS) for data protection
-- ✅ Marketplace categories, including electronics, home and garden, vehicles, fashion, and collectibles
+- ✅ Nested categories for electronics, vehicles, property, services, jobs, animals, home, fashion, hobbies, kids, and collectibles
 - ✅ Transaction-safe auction bidding and winner checkout
 - ✅ Order management
 - ✅ In-app messaging

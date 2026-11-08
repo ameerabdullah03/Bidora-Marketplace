@@ -215,6 +215,7 @@ CREATE TABLE IF NOT EXISTS categories (
   description TEXT,
   icon_emoji VARCHAR(10),
   display_order INT,
+  parent_id BIGINT REFERENCES categories(id) ON DELETE RESTRICT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -753,12 +754,12 @@ FOR EACH ROW EXECUTE FUNCTION update_conversation_preview();
 -- INITIAL CATEGORIES DATA
 -- ============================================
 INSERT INTO categories (name, slug, description, icon_emoji, display_order) VALUES
-  ('Phones & Tablets', 'phones-tablets', 'Smartphones and tablet devices', '📱', 1),
-  ('Laptops & Computers', 'laptops-computers', 'Laptops, desktops, and computers', '💻', 2),
-  ('Audio & Headphones', 'audio-headphones', 'Headphones, speakers, and audio equipment', '🎧', 3),
-  ('Wearables', 'wearables', 'Smartwatches and wearable devices', '⌚', 4),
-  ('Cameras & Photography', 'cameras-photography', 'Cameras and photography equipment', '📷', 5),
-  ('Gaming & Consoles', 'gaming-consoles', 'Gaming consoles and accessories', '🎮', 6)
+  ('Phones & Tablets', 'phones-tablets', 'Smartphones and tablet devices', NULL, 1),
+  ('Laptops & Computers', 'laptops-computers', 'Laptops, desktops, and computers', NULL, 2),
+  ('Audio & Headphones', 'audio-headphones', 'Headphones, speakers, and audio equipment', NULL, 3),
+  ('Wearables', 'wearables', 'Smartwatches and wearable devices', NULL, 4),
+  ('Cameras & Photography', 'cameras-photography', 'Cameras and photography equipment', NULL, 5),
+  ('Gaming & Consoles', 'gaming-consoles', 'Gaming consoles and accessories', NULL, 6)
 ON CONFLICT DO NOTHING;
 
 UPDATE public.categories SET display_order = CASE name

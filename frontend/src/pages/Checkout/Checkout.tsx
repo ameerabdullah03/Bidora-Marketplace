@@ -3,6 +3,7 @@ import { CreditCard, Smartphone, Truck, Check, ChevronRight, AlertCircle, Packag
 import { motion } from 'framer-motion'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { supportsGoodsTransactions, useCategories } from '../../hooks/useCategories'
 
 interface CheckoutData {
   productId: string
@@ -11,11 +12,13 @@ interface CheckoutData {
   sellerId: string
   sellerName: string
   quantity: number
+  categoryId: number
   auctionId?: string
 }
 
 export default function Checkout({ checkoutData: initialCheckoutData, productId, auctionId }: { checkoutData?: CheckoutData; productId?: string; auctionId?: string }) {
   const { user } = useAuth()
+  const { categories, loading: categoriesLoading } = useCategories()
   const [loadedCheckoutData, setLoadedCheckoutData] = useState<CheckoutData | undefined>()
   const [productLoading, setProductLoading] = useState(false)
   const [step, setStep] = useState(1)
@@ -30,7 +33,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
   const checkoutData = initialCheckoutData || loadedCheckoutData
 
   useEffect(() => {
-    if ((!productId && !auctionId) || initialCheckoutData) return
+    if ((!productId && !auctionId) || initialCheckoutData || categoriesLoading) return
     let cancelled = false
     setProductLoading(true)
     void (async () => {
@@ -40,7 +43,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
         if (auctionId) {
           const result = await supabase
             .from('auctions')
-            .select('id, current_bid, starting_price, end_time, winner_id, product:products!auctions_product_id_fkey(id, title, seller_id, status, seller:public_profiles!products_seller_id_fkey(full_name))')
+            .select('id, current_bid, starting_price, end_time, winner_id, product:products!auctions_product_id_fkey(id, title, seller_id, status, category_id, seller:public_profiles!products_seller_id_fkey(full_name))')
             .eq('id', auctionId)
             .single()
           data = result.data
@@ -48,7 +51,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
         } else {
           const result = await supabase
             .from('products')
-            .select('id, title, price, seller_id, seller:public_profiles!products_seller_id_fkey(full_name)')
+            .select('id, title, price, seller_id, category_id, seller:public_profiles!products_seller_id_fkey(full_name)')
             .eq('id', productId!)
             .eq('status', 'approved')
             .eq('is_auction', false)
@@ -66,6 +69,10 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
           setError('This auction checkout is only available to its winner after it ends.')
           return
         }
+        if (!supportsGoodsTransactions(categories, Number(product.category_id))) {
+          setError('Cash-on-delivery checkout is not available for services, jobs, or property listings. Contact the seller to arrange details.')
+          return
+        }
         setLoadedCheckoutData({
           productId: product.id,
           productTitle: product.title,
@@ -73,6 +80,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
           sellerId: product.seller_id,
           sellerName: (product.seller as any)?.full_name || 'Seller',
           quantity: 1,
+          categoryId: Number(product.category_id),
           auctionId,
         })
       } finally {
@@ -80,7 +88,7 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
       }
     })()
     return () => { cancelled = true }
-  }, [productId, auctionId, user?.id, initialCheckoutData])
+  }, [productId, auctionId, user?.id, initialCheckoutData, categoriesLoading, categories])
 
   const totalPrice = checkoutData?.price || 0
 
@@ -92,6 +100,10 @@ export default function Checkout({ checkoutData: initialCheckoutData, productId,
     }
     if (!checkoutData?.productId || !checkoutData.sellerId || !checkoutData.price) {
       setError('Choose a product from its listing before checking out.')
+      return
+    }
+    if (!supportsGoodsTransactions(categories, checkoutData.categoryId)) {
+      setError('Cash-on-delivery checkout is not available for services, jobs, or property listings. Contact the seller to arrange details.')
       return
     }
     if (!deliveryAddress.trim()) {

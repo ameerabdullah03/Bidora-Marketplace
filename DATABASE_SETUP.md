@@ -15,13 +15,13 @@ Use exactly one path below. Never run setup SQL over an existing production data
 7. Click **Run** (or press Ctrl+Enter)
 8. Wait for it to complete (you'll see green checkmarks)
 
-`database/schema.sql` is the canonical schema. It creates the tables, auth-profile trigger, security-definer order/bid functions, ratings triggers, and seed categories. It does **not** enable RLS on all tables; applying the RLS script is required before using the app.
+`database/schema.sql` is the canonical schema. It creates the tables, auth-profile trigger, security-definer order/bid functions, ratings triggers, and base categories. It does **not** enable RLS on all tables; applying the RLS script is required before using the app. After the schema and RLS policies, apply `database/migrations/2026-11-08-general-marketplace-categories.sql` to install the complete nested marketplace taxonomy.
 
 Do not run `database/schema-simplified.sql`; it is a legacy reference. If a simplified schema was installed previously, stop and prepare a project-specific migration after backing up the data. Do not run either setup path over that database.
 
 ### Existing canonical installation
 
-Use this path only when `database/schema.sql` **and** the baseline `database/rls-policies.sql` have already been applied. Back up the project, then run `database/migrations/2026-11-05-marketplace-core.sql` once. It upgrades the existing canonical installation with profile backfill, favorites/admin tables, atomic marketplace functions, rating/message triggers, and the current policy definitions. Apply `database/migrations/2026-11-08-privacy-requests.sql` and `database/migrations/2026-11-08-general-marketplace-categories.sql` as separate additive migrations. The first enables the privacy request form/admin queue; the second adds general categories while preserving existing category IDs and listings.
+Use this path only when `database/schema.sql` **and** the baseline `database/rls-policies.sql` have already been applied. Back up the project, then run `database/migrations/2026-11-05-marketplace-core.sql` once. It upgrades the existing canonical installation with profile backfill, favorites/admin tables, atomic marketplace functions, rating/message triggers, and the current policy definitions. Apply `database/migrations/2026-11-08-privacy-requests.sql` and `database/migrations/2026-11-08-general-marketplace-categories.sql` as separate additive migrations. The first enables the privacy request form/admin queue; the second creates nested marketplace categories while preserving existing category IDs and listings, and blocks checkout/auctions for job, service, and property categories.
 
 If only `schema.sql` was applied, finish the new-project steps below before using the app. The RLS script is a one-time setup script and is not intended to be rerun over an installation that already has policies.
 
@@ -34,6 +34,8 @@ If only `schema.sql` was applied, finish the new-project steps below before usin
 5. Wait for completion
 
 This enables Row-Level Security and installs the policies required by the frontend. Run it after `schema.sql`.
+
+On a new project, then apply `database/migrations/2026-11-08-general-marketplace-categories.sql` to install the full nested taxonomy. On an existing project, use the backup-first migration path above.
 
 To enable listing moderation, follow `ADMIN_SETUP.md` to grant the first administrator. Admin access is not granted automatically.
 
@@ -58,7 +60,7 @@ After the selected SQL path completes successfully:
    - favorites
    - privacy_requests
 
-3. Click on **categories** → after applying the marketplace category migration, you should see general goods categories alongside the existing electronics categories.
+3. Click on **categories** → after applying the marketplace category migration, you should see grouped departments and nested subcategories for goods, services, jobs, property, animals, and more.
 
 Also verify the `public_profiles` view is available and these RPCs appear in the Supabase API schema: `place_auction_bid`, `place_product_order`, `place_auction_order`, and `advance_order_status`. The frontend needs these objects for public seller details, favorites/admin features, bidding, and order workflows.
 
